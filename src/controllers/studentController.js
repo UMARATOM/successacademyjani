@@ -31,34 +31,59 @@ exports.postRegister = (req, res) => {
   const first_name = nameParts[0];
   const last_name = nameParts.slice(1).join(' ') || '';
 
-  // Ensure missing columns exist right before insertion
-  db.serialize(() => {
-    db.run("ALTER TABLE students ADD COLUMN name TEXT", () => {});
-    db.run("ALTER TABLE students ADD COLUMN first_name TEXT", () => {});
-    db.run("ALTER TABLE students ADD COLUMN last_name TEXT", () => {});
-    db.run("ALTER TABLE students ADD COLUMN registration_number TEXT", () => {});
-    db.run("ALTER TABLE students ADD COLUMN guardian_name TEXT", () => {});
-    db.run("ALTER TABLE students ADD COLUMN guardian_phone TEXT", () => {});
+  // 1. Inspect existing columns in 'students' table
+  db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
+    if (pragmaErr) {
+      console.error("PRAGMA Error:", pragmaErr);
+    }
 
-    const currentYear = new Date().getFullYear();
-    db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
-      const count = (row && row.count) ? row.count : 0;
-      const nextNum = String(count + 1).padStart(3, '0');
-      const registration_number = `SAJ/${currentYear}/${nextNum}`;
+    const existingCols = (columns || []).map(c => c.name);
 
-      const sql = `INSERT INTO students (name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      const params = [full_name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number];
+    // List of required columns to add if missing
+    const requiredCols = [
+      { name: 'name', type: 'TEXT' },
+      { name: 'first_name', type: 'TEXT' },
+      { name: 'last_name', type: 'TEXT' },
+      { name: 'class_name', type: 'TEXT' },
+      { name: 'gender', type: 'TEXT' },
+      { name: 'dob', type: 'TEXT' },
+      { name: 'guardian_name', type: 'TEXT' },
+      { name: 'guardian_phone', type: 'TEXT' },
+      { name: 'registration_number', type: 'TEXT' },
+      { name: 'passport_path', type: 'TEXT' }
+    ];
 
-      db.run(sql, params, function(dbErr) {
-        if (dbErr) {
-          console.error("Database error registering student:", dbErr);
-          return res.render('students/register', { 
-            error: 'Failed to save registration: ' + dbErr.message, 
-            user: req.session ? req.session.user : null 
-          });
-        }
-        res.redirect('/students');
+    // Filter out columns that don't exist yet
+    const missing = requiredCols.filter(c => !existingCols.includes(c.name));
+
+    const addColumnPromises = missing.map(c => {
+      return new Promise((resolve) => {
+        db.run(`ALTER TABLE students ADD COLUMN ${c.name} ${c.type}`, () => resolve());
+      });
+    });
+
+    // 2. Wait for all missing columns to be created, then execute INSERT
+    Promise.all(addColumnPromises).then(() => {
+      const currentYear = new Date().getFullYear();
+      db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
+        const count = (row && row.count) ? row.count : 0;
+        const nextNum = String(count + 1).padStart(3, '0');
+        const registration_number = `SAJ/${currentYear}/${nextNum}`;
+
+        const sql = `INSERT INTO students (name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const params = [full_name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number];
+
+        db.run(sql, params, function(dbErr) {
+          if (dbErr) {
+            console.error("Database error registering student:", dbErr);
+            return res.render('students/register', { 
+              error: 'Failed to save registration: ' + dbErr.message, 
+              user: req.session ? req.session.user : null 
+            });
+          }
+          res.redirect('/students');
+        });
       });
     });
   });
