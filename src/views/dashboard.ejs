@@ -1,34 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Academy - Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <div class="app-container">
-        <header class="header-bar">
-            <h2>Success Academy</h2>
-            <div class="user-info">Logged in: <strong><%= user.username %></strong> (<%= user.role %>) | <a href="/logout">Logout</a></div>
-        </header>
-
-        <nav class="navigation-tabs">
-            <a href="/dashboard" class="active">Dashboard</a>
-            <a href="/students">Manage Students</a>
-            <% if (user.role === 'admin') { %>
-                <a href="/teachers">Manage Staff</a>
-            <% } %>
-            <a href="/grades">Gradebook</a>
-        </nav>
-
-        <main class="content-body" style="text-align: center; padding: 50px 30px;">
-            <h1>Welcome back, <%= user.username %>!</h1>
-            <p style="font-size: 18px; color: #5f6368;">Your active role is: <strong><%= user.role %></strong></p>
-            <div style="margin-top: 30px; padding: 20px; background: #e8f0fe; border-radius: 8px; display: inline-block;">
-                <p style="margin: 0; color: #1a73e8; font-weight: bold;">System Engine online and connected securely to the database.</p>
-            </div>
-        </main>
-    </div>
-</body>
-</html>
+<%- include('partials/header') %>
+<div class="container">
+  <h2>Welcome back, <%= user ? user.username : 'Admin' %>!</h2>
+  <p>System Engine online and connected securely to the database.</p>
+</div>
+<%- include('partials/footer') %>
