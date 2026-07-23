@@ -12,7 +12,6 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = (req, res) => {
-  // Safe fallback if req.body is undefined
   const body = req.body || {};
   const full_name = body.full_name ? body.full_name.trim() : '';
   const class_name = body.class_name || '';
@@ -38,9 +37,9 @@ exports.postRegister = (req, res) => {
     const nextNum = String(count + 1).padStart(3, '0');
     const registration_number = `SAJ/${currentYear}/${nextNum}`;
 
-    const sql = `INSERT INTO students (registration_number, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [registration_number, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone];
+    const sql = `INSERT INTO students (name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [full_name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number];
 
     db.run(sql, params, function(dbErr) {
       if (dbErr) {
