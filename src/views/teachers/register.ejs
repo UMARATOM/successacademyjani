@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Academy - Add Staff</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header-bar">
+            <h2>Success Academy</h2>
+            <div class="user-info">Logged in: <strong><%= user.username %></strong> | <a href="/logout">Logout</a></div>
+        </header>
+
+        <nav class="navigation-tabs">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/students">Manage Students</a>
+            <a href="/teachers" class="active">Manage Staff</a>
+        </nav>
+
+        <main class="content-body">
+            <div class="form-card" style="max-width: 500px;">
+                <h3>Register New Staff</h3>
+                <p style="color:#5f6368; font-size:13px; margin-top:-10px; margin-bottom:20px;">Creates their profile and sets their login password automatically to: <code>teacher123</code></p>
+                
+                <% if (error) { %>
+                    <div class="error-msg"><%= error %></div>
+                <% } %>
+
+                <form action="/teachers/register" method="POST">
+                    <div class="form-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" name="fullname" placeholder="e.g., Mrs. Sarah Usman" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qualification">Qualifications</label>
+                        <input type="text" id="qualification" name="qualification" placeholder="e.g., B.Ed, NCE" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialty">Subject Specialty</label>
+                        <input type="text" id="specialty" name="specialty" placeholder="e.g., Mathematics, English" required>
+                    </div>
+
+                    <div class="form-group" style="border-top:1px solid #eee; padding-top:15px; margin-top:20px;">
+                        <label for="username">Login Username</label>
+                        <input type="text" id="username" name="username" placeholder="e.g., sarah.usman" required autocomplete="off">
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" class="btn-primary" style="flex: 1;">Save Staff Member</button>
+                        <a href="/teachers" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; border-radius: 4px; color: #333; background: #fff;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Academy - Staff</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header-bar">
+            <h2>Success Academy</h2>
+            <div class="user-info">Logged in: <strong><%= user.username %></strong> | <a href="/logout">Logout</a></div>
+        </header>
+
+        <nav class="navigation-tabs">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/students">Manage Students</a>
+            <a href="/teachers" class="active">Manage Staff</a>
+        </nav>
+
+        <main class="content-body">
+            <div class="content-header">
+                <h3>Staff & Teachers</h3>
+                <a href="/teachers/register" class="btn-primary">Register New Staff</a>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Staff ID</th>
+                        <th>Full Name</th>
+                        <th>Gender</th>
+                        <th>Qualification</th>
+                        <th>Specialty</th>
+                        <th>Login Username</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (teachers.length === 0) { %>
+                        <tr>
+                            <td colspan="7" style="text-align: center;">No teachers registered yet. Click "Register New Staff" to begin.</td>
+                        </tr>
+                    <% } else { %>
+                        <% teachers.forEach(teacher => { %>
+                            <tr>
+                                <td><%= teacher.staff_id %></td>
+                                <td><strong><%= teacher.fullname %></strong></td>
+                                <td><%= teacher.gender %></td>
+                                <td><%= teacher.qualification %></td>
+                                <td><%= teacher.subject_specialty %></td>
+                                <td><code style="background:#eef2f6; padding: 2px 6px; border-radius:3px;"><%= teacher.username %></code></td>
+                                <td style="text-align: right;">
+                                    <a href="/teachers/delete/<%= teacher.id %>" class="btn-action delete" onclick="return confirm('Are you sure you want to remove this staff profile and disable their login account?')" style="text-decoration:none; padding: 6px 12px; background: #fce8e6; color: #d93025; border-radius:4px; font-size:12px; font-weight:bold;">Remove</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,156 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 350px;
+}
+h2, h3 {
+    color: #1a73e8;
+    margin: 0 0 15px 0;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+button, .btn-primary {
+    background: #1a73e8;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+button:hover, .btn-primary:hover {
+    background: #1557b0;
+}
+.error-msg {
+    color: red;
+    background: #ffe6e6;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* App Dashboard and Student Tables Layout */
+.app-container {
+    background: white;
+    width: 90%;
+    max-width: 1000px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 20px;
+}
+.header-bar {
+    background: #1a73e8;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header-bar h2 {
+    color: white;
+    margin: 0;
+}
+.user-info a {
+    color: #ffd04b;
+    text-decoration: none;
+}
+.navigation-tabs {
+    background: #eef2f6;
+    display: flex;
+    border-bottom: 1px solid #ddd;
+}
+.navigation-tabs a {
+    padding: 15px 25px;
+    text-decoration: none;
+    color: #5f6368;
+    font-weight: bold;
+}
+.navigation-tabs a.active {
+    background: white;
+    color: #1a73e8;
+    border-top: 3px solid #1a73e8;
+}
+.content-body {
+    padding: 30px;
+}
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+.data-table th {
+    background: #f8f9fa;
+    color: #5f6368;
+}
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.status-badge.active {
+    background: #e6f4ea;
+    color: #137333;
+}
+.form-card {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+.dashboard-container {
+    text-align: center;
+    padding: 40px;
+}
+.btn-logout {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #d93025;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}

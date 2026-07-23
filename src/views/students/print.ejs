@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Success Academy - Printable Student Roll</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; color: #333; background: #fff; }
+.header { text-align: center; border-bottom: 3px double #333; padding-bottom: 15px; margin-bottom: 20px; }
+.header h1 { margin: 0; font-size: 26px; letter-spacing: 1px; color: #0f2c59; }
+.header p { margin: 5px 0 0 0; font-size: 14px; color: #666; }
+.report-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #333; padding: 8px 10px; text-align: left; font-size: 12px; }
+th { background-color: #0f2c59; color: white; font-weight: bold; }
+.passport-col { width: 55px; text-align: center; }
+.passport-img { width: 45px; height: 45px; object-fit: cover; border: 1px solid #999; border-radius: 2px; }
+.filter-container { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #f4f6f9; padding: 12px 18px; border-radius: 6px; }
+.btn-print { background-color: #0f2c59; color: white; padding: 8px 18px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
+@media print {
+  .filter-container { display: none !important; }
+  body { margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="filter-container">
+  <form method="GET" action="/students/print" style="display: flex; gap: 10px; align-items: center;">
+    <label><strong>Select Class Filter:</strong></label>
+    <select name="class" onchange="this.form.submit()" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+      <option value="">-- All Students (Whole School) --</option>
+      <% classes.forEach(c => { %>
+        <option value="<%= c %>" <%= selectedClass === c ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+  </form>
+  <button class="btn-print" onclick="window.print()">Print List</button>
+</div>
+
+<div class="header">
+  <h1>SUCCESS ACADEMY JANI</h1>
+  <p>OFFICIAL STUDENT REGISTER LEDGER</p>
+</div>
+
+<div class="report-title">
+  <% if (selectedClass) { %>
+    CLASS REGISTER: <%= selectedClass %>
+  <% } else { %>
+    COMPLETE MASTER SCHOOL ROLL (ALL CLASSES)
+  <% } %>
+</div>
+
+<table>
+<thead>
+<tr>
+<th class="passport-col">Passport</th>
+<th>Reg Number</th>
+<th>Full Name</th>
+<th>Class</th>
+<th>Gender</th>
+<th>Date of Birth</th>
+<th>Parent Name</th>
+<th>Parent Phone</th>
+</tr>
+</thead>
+<tbody>
+<% if (students.length === 0) { %>
+<tr><td colspan="8" style="text-align: center;">No students found matching selection.</td></tr>
+<% } else { %>
+<% students.forEach((student) => { %>
+<tr>
+<td class="passport-col">
+<% if (student.passport_path) { %>
+<img src="<%= student.passport_path %>" class="passport-img" alt="Passport">
+<% } else { %>
+<span style="font-size: 8px; color: #999;">No Image</span>
+<% } %>
+</td>
+<td><%= student.reg_number %></td>
+<td><strong><%= student.fullname %></strong></td>
+<td><%= student.class %></td>
+<td><%= student.gender %></td>
+<td><%= student.dob || 'N/A' %></td>
+<td><%= student.parent_name || 'N/A' %></td>
+<td><%= student.parent_phone || 'N/A' %></td>
+</tr>
+<% }) %>
+<% } %>
+</tbody>
+</table>
+</body>
+</html>
