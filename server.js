@@ -37,3 +37,6 @@ app.listen(PORT, () => {
 
 // Serve uploads statically
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
