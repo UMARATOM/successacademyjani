@@ -13,9 +13,14 @@ exports.getRegister = (req, res) => {
   res.render('students/register', { error: null, user: req.session ? req.session.user : null });
 };
 
-// POST: Register New Student in SQLite
+// POST: Register New Student safely in SQLite
 exports.postRegister = (req, res) => {
-  const { full_name, class_name, gender, dob, parent_name, parent_phone } = req.body;
+  const full_name = req.body.full_name ? req.body.full_name.trim() : '';
+  const class_name = req.body.class_name || '';
+  const gender = req.body.gender || 'Male';
+  const dob = req.body.dob || '';
+  const guardian_name = req.body.parent_name || req.body.guardian_name || '';
+  const guardian_phone = req.body.parent_phone || req.body.guardian_phone || '';
 
   if (!full_name || !class_name) {
     return res.render('students/register', { 
@@ -24,26 +29,27 @@ exports.postRegister = (req, res) => {
     });
   }
 
-  // Split name into first and last
-  const nameParts = full_name.trim().split(' ');
+  // Split full name into first and last
+  const nameParts = full_name.split(' ');
   const first_name = nameParts[0];
   const last_name = nameParts.slice(1).join(' ') || '';
 
   // Generate sequential Registration Number (e.g., SAJ/2026/001)
   const currentYear = new Date().getFullYear();
   db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
-    const nextNum = String((row ? row.count : 0) + 1).padStart(3, '0');
+    const count = (row && row.count) ? row.count : 0;
+    const nextNum = String(count + 1).padStart(3, '0');
     const registration_number = `SAJ/${currentYear}/${nextNum}`;
 
     const sql = `INSERT INTO students (registration_number, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [registration_number, first_name, last_name, class_name, gender, dob, parent_name, parent_phone];
+    const params = [registration_number, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone];
 
-    db.run(sql, params, function(err) {
-      if (err) {
-        console.error("Database error registering student:", err);
+    db.run(sql, params, function(dbErr) {
+      if (dbErr) {
+        console.error("Database error registering student:", dbErr);
         return res.render('students/register', { 
-          error: 'Failed to save student record to database.', 
+          error: 'Failed to save registration: ' + dbErr.message, 
           user: req.session ? req.session.user : null 
         });
       }

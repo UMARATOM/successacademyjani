@@ -4,33 +4,44 @@
   <div class="card">
     <h2>New Student Registration</h2>
     
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div style="background: #fed7d7; color: #9b2c2c; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+    <% if (typeof error !== 'undefined' && error && error !== null) { %>
+      <div style="background: #fed7d7; color: #9b2c2c; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-weight: bold;">
         <%= error %>
       </div>
     <% } %>
 
-    <form action="/students/register" method="POST">
+    <form action="/students/register" method="POST" enctype="multipart/form-data">
       <div class="form-group">
-        <label for="full_name">Student Full Name:</label>
+        <label for="full_name">Student Full Name *</label>
         <input type="text" id="full_name" name="full_name" placeholder="e.g., Abubakar Usman" required>
       </div>
 
       <div class="form-group">
-        <label for="class_name">Class Category:</label>
+        <label for="class_name">Class Category *</label>
         <select id="class_name" name="class_name" required>
           <option value="">-- Select Class --</option>
-          <option value="JSS 1">JSS 1</option>
-          <option value="JSS 2">JSS 2</option>
-          <option value="JSS 3">JSS 3</option>
-          <option value="SSS 1">SSS 1</option>
-          <option value="SSS 2">SSS 2</option>
-          <option value="SSS 3">SSS 3</option>
+          <optgroup label="Early Childhood & Nursery">
+            <option value="Pre-Nursery">Pre-Nursery</option>
+            <option value="Nursery 1">Nursery 1</option>
+            <option value="Nursery 2">Nursery 2</option>
+          </optgroup>
+          <optgroup label="Primary Education">
+            <option value="Primary 1">Primary 1</option>
+            <option value="Primary 2">Primary 2</option>
+            <option value="Primary 3">Primary 3</option>
+            <option value="Primary 4">Primary 4</option>
+            <option value="Primary 5">Primary 5</option>
+          </optgroup>
+          <optgroup label="Junior Secondary School">
+            <option value="JSS 1">JSS 1</option>
+            <option value="JSS 2">JSS 2</option>
+            <option value="JSS 3">JSS 3</option>
+          </optgroup>
         </select>
       </div>
 
       <div class="form-group">
-        <label for="gender">Gender:</label>
+        <label for="gender">Gender</label>
         <select id="gender" name="gender">
           <option value="Male">Male</option>
           <option value="Female">Female</option>
@@ -38,21 +49,40 @@
       </div>
 
       <div class="form-group">
-        <label for="dob">Date of Birth:</label>
+        <label for="dob">Date of Birth</label>
         <input type="date" id="dob" name="dob">
       </div>
 
       <div class="form-group">
-        <label for="parent_name">Parent / Guardian Full Name:</label>
+        <label for="parent_name">Parent / Guardian Full Name</label>
         <input type="text" id="parent_name" name="parent_name" placeholder="e.g., Mallam Usman Ibrahim">
       </div>
 
       <div class="form-group">
-        <label for="parent_phone">Parent Phone Number:</label>
+        <label for="parent_phone">Parent Phone Number</label>
         <input type="text" id="parent_phone" name="parent_phone" placeholder="e.g., 08012345678">
       </div>
 
-      <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Complete Registration</button>
+      <fieldset style="border: 1px solid #cbd5e0; border-radius: 6px; padding: 15px; margin-top: 20px; margin-bottom: 20px;">
+        <legend style="font-weight: bold; color: #2b6cb0; padding: 0 8px;">Upload Documents</legend>
+
+        <div class="form-group">
+          <label for="passport">Passport Photograph (Required)</label>
+          <input type="file" id="passport" name="passport" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label for="birth_certificate">Birth Certificate (Required)</label>
+          <input type="file" id="birth_certificate" name="birth_certificate" accept="image/*,.pdf">
+        </div>
+
+        <div class="form-group">
+          <label for="primary_certificate">Primary Certificate (Required for JSS)</label>
+          <input type="file" id="primary_certificate" name="primary_certificate" accept="image/*,.pdf">
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn" style="width: 100%; padding: 12px; font-size: 16px;">Save Registration</button>
     </form>
   </div>
 </div>
