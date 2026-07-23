@@ -3,15 +3,10 @@ const path = require('path');
 const session = require('express-session');
 const app = express();
 
-const authRoutes = require('./src/routes/authRoutes');
-const studentRoutes = require('./src/routes/studentRoutes');
-const teacherRoutes = require('./src/routes/teacherRoutes');
-const gradeRoutes = require('./src/routes/gradeRoutes');
-const subjectRoutes = require('./src/routes/subjectRoutes');
-
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
+// BODY PARSERS MUST COME FIRST
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,7 +17,13 @@ app.use(session({
   saveUninitialized: true
 }));
 
-// Route mounting
+const authRoutes = require('./src/routes/authRoutes');
+const studentRoutes = require('./src/routes/studentRoutes');
+const teacherRoutes = require('./src/routes/teacherRoutes');
+const gradeRoutes = require('./src/routes/gradeRoutes');
+const subjectRoutes = require('./src/routes/subjectRoutes');
+
+// ROUTE MOUNTING
 app.use('/', authRoutes);
 app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
