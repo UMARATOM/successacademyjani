@@ -1,92 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Success Academy - Register Student</title>
-<link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<div class="app-container">
-<header class="header-bar">
-<h2>Success Academy</h2>
-<div class="user-info">Logged in: <strong><%= user.username %></strong> | <a href="/logout">Logout</a></div>
-</header>
-<nav class="navigation-tabs">
-<a href="/dashboard">Dashboard</a>
-<a href="/students" class="active">Manage Students</a>
-<% if (user.role === 'admin') { %>
-<a href="/teachers">Manage Staff</a>
-<a href="/subjects">Manage Subjects</a>
-<% } %>
-<a href="/grades">Gradebook</a>
-</nav>
-<main class="content-body">
-<div class="form-card" style="max-width: 650px; margin: 0 auto;">
-<h3>New Student Registration</h3>
-<% if (error) { %>
-<div class="error-msg"><%= error %></div>
-<% } %>
-<form action="/students/register" method="POST" enctype="multipart/form-data">
-<div class="form-group">
-<label for="fullname">Full Name</label>
-<input type="text" id="fullname" name="fullname" placeholder="e.g., Abubakar Usman" required>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="card">
+    <h2>New Student Registration</h2>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div style="background: #fed7d7; color: #9b2c2c; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/students/register" method="POST">
+      <div class="form-group">
+        <label for="full_name">Student Full Name:</label>
+        <input type="text" id="full_name" name="full_name" placeholder="e.g., Abubakar Usman" required>
+      </div>
+
+      <div class="form-group">
+        <label for="class_name">Class Category:</label>
+        <select id="class_name" name="class_name" required>
+          <option value="">-- Select Class --</option>
+          <option value="JSS 1">JSS 1</option>
+          <option value="JSS 2">JSS 2</option>
+          <option value="JSS 3">JSS 3</option>
+          <option value="SSS 1">SSS 1</option>
+          <option value="SSS 2">SSS 2</option>
+          <option value="SSS 3">SSS 3</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="dob">Date of Birth:</label>
+        <input type="date" id="dob" name="dob">
+      </div>
+
+      <div class="form-group">
+        <label for="parent_name">Parent / Guardian Full Name:</label>
+        <input type="text" id="parent_name" name="parent_name" placeholder="e.g., Mallam Usman Ibrahim">
+      </div>
+
+      <div class="form-group">
+        <label for="parent_phone">Parent Phone Number:</label>
+        <input type="text" id="parent_phone" name="parent_phone" placeholder="e.g., 08012345678">
+      </div>
+
+      <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Complete Registration</button>
+    </form>
+  </div>
 </div>
-<div class="form-group">
-<label for="s_class">Class</label>
-<select id="s_class" name="s_class" required style="width:100%; padding: 10px; border:1px solid #ccc; border-radius: 4px;">
-<option value="">-- Select Class --</option>
-<option value="Pre-Nursery">Pre-Nursery</option>
-<option value="Nursery 1">Nursery 1</option>
-<option value="Nursery 2">Nursery 2</option>
-<option value="Primary 1">Primary 1</option>
-<option value="Primary 2">Primary 2</option>
-<option value="Primary 3">Primary 3</option>
-<option value="Primary 4">Primary 4</option>
-<option value="Primary 5">Primary 5</option>
-<option value="JSS 1">JSS 1</option>
-<option value="JSS 2">JSS 2</option>
-<option value="JSS 3">JSS 3</option>
-</select>
-</div>
-<div class="form-group">
-<label for="gender">Gender</label>
-<select id="gender" name="gender" required style="width:100%; padding: 10px; border:1px solid #ccc; border-radius: 4px;">
-<option value="Male">Male</option>
-<option value="Female">Female</option>
-</select>
-</div>
-<div class="form-group">
-<label for="dob">Date of Birth</label>
-<input type="date" id="dob" name="dob" required style="width:100%; padding: 10px; border:1px solid #ccc; border-radius: 4px;">
-</div>
-<div class="form-group">
-<label for="parent_name">Parent / Guardian Full Name</label>
-<input type="text" id="parent_name" name="parent_name" placeholder="e.g., Mallam Usman Ibrahim" required>
-</div>
-<div class="form-group">
-<label for="parent_phone">Parent Phone Number</label>
-<input type="tel" id="parent_phone" name="parent_phone" placeholder="e.g., 08012345678" required>
-</div>
-<div class="uploads-section" style="border: 1px dashed #ccc; padding: 15px; border-radius: 6px; margin: 20px 0; background: #fafafa;">
-<h4 style="margin: 0 0 10px 0;">Upload Documents</h4>
-<div class="form-group">
-<label for="passport">Passport Photograph (Required)</label>
-<input type="file" id="passport" name="passport" accept="image/*" required>
-</div>
-<div class="form-group">
-<label for="birth_cert">Birth Certificate (Required)</label>
-<input type="file" id="birth_cert" name="birth_cert" accept="image/*" required>
-</div>
-<div class="form-group">
-<label for="primary_cert">Primary Certificate (Required for JSS)</label>
-<input type="file" id="primary_cert" name="primary_cert" accept="image/*">
-</div>
-</div>
-<button type="submit" class="btn-primary" style="width: 100%;">Complete Registration</button>
-</form>
-</div>
-</main>
-</div>
-</body>
-</html>
+
+<%- include('../partials/footer') %>
