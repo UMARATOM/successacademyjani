@@ -1,65 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Academy - Staff</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <div class="app-container">
-        <header class="header-bar">
-            <h2>Success Academy</h2>
-            <div class="user-info">Logged in: <strong><%= user.username %></strong> | <a href="/logout">Logout</a></div>
-        </header>
+<%- include('../partials/header') %>
 
-        <nav class="navigation-tabs">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/students">Manage Students</a>
-            <a href="/teachers" class="active">Manage Staff</a>
-        </nav>
+<div class="container" style="padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Staff & Teacher Directory</h2>
+    <a href="/teachers/register" style="padding: 10px 15px; background: #1a73e8; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">+ Register New Staff</a>
+  </div>
 
-        <main class="content-body">
-            <div class="content-header">
-                <h3>Staff & Teachers</h3>
-                <a href="/teachers/register" class="btn-primary">Register New Staff</a>
-            </div>
+  <% if (typeof teachers !== 'undefined' && teachers.length > 0) { %>
+    <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+      <thead>
+        <tr style="background: #f2f2f2; text-align: left;">
+          <th style="border: 1px solid #ccc; padding: 10px;">Staff ID</th>
+          <th style="border: 1px solid #ccc; padding: 10px;">Full Name</th>
+          <th style="border: 1px solid #ccc; padding: 10px;">Role</th>
+          <th style="border: 1px solid #ccc; padding: 10px;">Phone Number</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% teachers.forEach(function(teacher) { %>
+          <tr>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= teacher.staff_id || 'N/A' %></td>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= teacher.first_name %> <%= teacher.last_name %></td>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= teacher.role || 'Teacher' %></td>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= teacher.phone || '-' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p style="margin-top: 20px; color: #666; background: #fff; padding: 15px; border-radius: 4px;">No staff members found in the database.</p>
+  <% } %>
+</div>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Staff ID</th>
-                        <th>Full Name</th>
-                        <th>Gender</th>
-                        <th>Qualification</th>
-                        <th>Specialty</th>
-                        <th>Login Username</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (teachers.length === 0) { %>
-                        <tr>
-                            <td colspan="7" style="text-align: center;">No teachers registered yet. Click "Register New Staff" to begin.</td>
-                        </tr>
-                    <% } else { %>
-                        <% teachers.forEach(teacher => { %>
-                            <tr>
-                                <td><%= teacher.staff_id %></td>
-                                <td><strong><%= teacher.fullname %></strong></td>
-                                <td><%= teacher.gender %></td>
-                                <td><%= teacher.qualification %></td>
-                                <td><%= teacher.subject_specialty %></td>
-                                <td><code style="background:#eef2f6; padding: 2px 6px; border-radius:3px;"><%= teacher.username %></code></td>
-                                <td style="text-align: right;">
-                                    <a href="/teachers/delete/<%= teacher.id %>" class="btn-action delete" onclick="return confirm('Are you sure you want to remove this staff profile and disable their login account?')" style="text-decoration:none; padding: 6px 12px; background: #fce8e6; color: #d93025; border-radius:4px; font-size:12px; font-weight:bold;">Remove</a>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
-        </main>
-    </div>
-</body>
-</html>
+<%- include('../partials/footer') %>
