@@ -11,26 +11,22 @@ db.serialize(() => {
   // Ensure base students table exists
   db.run(`CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
     class_name TEXT,
     gender TEXT,
     dob TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Dynamically add all potential missing columns
-  const requiredColumns = [
-    "ALTER TABLE students ADD COLUMN first_name TEXT",
-    "ALTER TABLE students ADD COLUMN last_name TEXT",
-    "ALTER TABLE students ADD COLUMN registration_number TEXT",
-    "ALTER TABLE students ADD COLUMN guardian_name TEXT",
-    "ALTER TABLE students ADD COLUMN guardian_phone TEXT",
-    "ALTER TABLE students ADD COLUMN passport_path TEXT"
+  // Explicitly add all missing name and detail columns
+  const cols = [
+    "name", "first_name", "last_name", 
+    "registration_number", "guardian_name", 
+    "guardian_phone", "passport_path"
   ];
 
-  requiredColumns.forEach(sql => {
-    db.run(sql, (err) => {
-      // Ignore duplicate column errors if column already exists
+  cols.forEach(col => {
+    db.run(`ALTER TABLE students ADD COLUMN ${col} TEXT`, () => {
+      // Catch and ignore duplicate column errors quietly
     });
   });
 });
