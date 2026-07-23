@@ -5,17 +5,19 @@ exports.getEnterGrades = (req, res) => {
   const selectedTerm = req.query.term || '';
   const selectedClass = req.query.class_name || '';
 
-  // Query all active classes for the dropdown menu
+  // Query distinct classes safely
   db.all("SELECT DISTINCT class_name FROM students WHERE class_name IS NOT NULL", [], (err, classes) => {
     if (err) {
       console.error("Database error fetching classes:", err);
       return res.status(500).send("Internal Server Error");
     }
 
+    const classList = classes || [];
+
     if (!selectedClass) {
       return res.render('grades/enter', {
         students: [],
-        classes: classes || [],
+        classes: classList,
         selectedSession,
         selectedTerm,
         selectedClass,
@@ -23,7 +25,6 @@ exports.getEnterGrades = (req, res) => {
       });
     }
 
-    // Fetch students belonging to the selected class
     db.all("SELECT * FROM students WHERE class_name = ?", [selectedClass], (err, students) => {
       if (err) {
         console.error("Database error fetching students:", err);
@@ -32,7 +33,7 @@ exports.getEnterGrades = (req, res) => {
 
       res.render('grades/enter', {
         students: students || [],
-        classes: classes || [],
+        classes: classList,
         selectedSession,
         selectedTerm,
         selectedClass,
