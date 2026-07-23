@@ -1,147 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Academy - Gradebook</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <div class="app-container" style="max-width: 1100px;">
-        <header class="header-bar">
-            <h2>Success Academy</h2>
-            <div class="user-info">Logged in: <strong><%= user.username %></strong> (<%= user.role %>) | <a href="/logout">Logout</a></div>
-        </header>
+<%- include('../partials/header') %>
 
-        <nav class="navigation-tabs">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/students">Manage Students</a>
-            <% if (user.role === 'admin') { %>
-                <a href="/teachers">Manage Staff</a>
-            <% } %>
-            <a href="/grades" class="active">Gradebook</a>
-        </nav>
-
-        <main class="content-body">
-            <h3>Academic Continuous Assessment (30/70 Split)</h3>
-            
-            <!-- Selector Form -->
-            <form action="/grades" method="GET" style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #e0e0e0; display:flex; gap:15px; align-items:flex-end; margin-bottom:20px;">
-                <div style="flex:1;">
-                    <label for="class-select" style="font-size:13px;">Class Category</label>
-                    <select id="class-select" name="class" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                        <option value="" disabled selected>Select Class</option>
-                        <% classes.forEach(c => { %>
-                            <option value="<%= c %>" <%= selectedClass === c ? 'selected' : '' %>><%= c %></option>
-                        <% }) %>
-                    </select>
-                </div>
-
-                <div style="flex:1;">
-                    <label for="subject-select" style="font-size:13px;">Academic Subject</label>
-                    <select id="subject-select" name="subject" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                        <option value="" disabled selected>Select Subject</option>
-                        <% subjects.forEach(sub => { %>
-                            <option value="<%= sub %>" <%= selectedSubject === sub ? 'selected' : '' %>><%= sub %></option>
-                        <% }) %>
-                    </select>
-                </div>
-
-                <button type="submit" style="height:38px; width:auto; padding: 0 20px;">Load Roster</button>
-            </form>
-
-            <!-- Grading Spreadsheet Grid -->
-            <% if (selectedClass && selectedSubject) { %>
-                <form action="/grades/save" method="POST">
-                    <input type="hidden" name="class_name" value="<%= selectedClass %>">
-                    <input type="hidden" name="subject_name" value="<%= selectedSubject %>">
-
-                    <div style="background:#e8f0fe; padding:10px 15px; border-radius:6px; color:#1a73e8; font-weight:bold; margin-bottom:15px;">
-                        Grading Class: <%= selectedClass %> | Subject: <%= selectedSubject %>
-                    </div>
-
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Reg Number</th>
-                                <th>Student Full Name</th>
-                                <th style="width:150px;">CA Score (Max 30)</th>
-                                <th style="width:150px;">Exam Score (Max 70)</th>
-                                <th style="width:100px; text-align:center;">Total (100)</th>
-                                <th style="width:100px; text-align:center;">Grade</th>
-                                <th style="width:150px; text-align:center;">Report Card</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (students.length === 0) { %>
-                                <tr>
-                                    <td colspan="7" style="text-align:center;">No students found registered in <%= selectedClass %>.</td>
-                                </tr>
-                            <% } else { %>
-                                <% students.forEach(student => { %>
-                                    <tr>
-                                        <td><%= student.reg_number %></td>
-                                        <td><strong><%= student.fullname %></strong></td>
-                                        <td>
-                                            <input type="hidden" name="student_ids" value="<%= student.id %>">
-                                            <input type="number" step="0.1" name="ca_scores" value="<%= student.ca_score || 0 %>" min="0" max="30" required style="padding:6px; text-align:center;" oninput="calculateTotal(this)">
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.1" name="exam_scores" value="<%= student.exam_score || 0 %>" min="0" max="70" required style="padding:6px; text-align:center;" oninput="calculateTotal(this)">
-                                        </td>
-                                        <td style="text-align:center; font-weight:bold;" class="student-total"><%= student.total_score || 0 %></td>
-                                        <td style="text-align:center; font-weight:bold; color:#1a73e8;" class="student-grade"><%= student.grade_letter || 'F9' %></td>
-                                        <td style="text-align:center;">
-                                            <a href="/grades/report-card/<%= student.id %>" class="btn-primary" style="padding: 4px 10px; font-size:11px; background:#1e8e3e; border-radius:3px;">View Report</a>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-
-                    <% if (students.length > 0) { %>
-                        <div style="margin-top:25px; text-align:right;">
-                            <button type="submit" class="btn-primary" style="background:#1e8e3e; padding:12px 30px;">Commit and Save Class Grades</button>
-                        </div>
-                    <% } %>
-                </form>
-            <% } else { %>
-                <div style="text-align:center; padding:50px; border: 1px dashed #ccc; border-radius:8px; color:#5f6368;">
-                    Select a class and subject above, then click "Load Roster" to start entering grades.
-                </div>
-            <% } %>
-        </main>
+<div class="container" style="padding: 20px;">
+  <h2>Academic Continuous Assessment (30/70 Split)</h2>
+  
+  <form action="/grades" method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div class="form-group">
+      <label for="session" style="font-weight:bold; display:block; margin-bottom:5px;">Academic Session:</label>
+      <select name="session" id="session" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">Select Session</option>
+        <option value="2025/2026">2025/2026</option>
+        <option value="2026/2027">2026/2027</option>
+        <option value="2027/2028">2027/2028</option>
+      </select>
     </div>
 
-    <!-- Live Spreadsheet Calculators -->
-    <script>
-        function calculateTotal(inputElement) {
-            const row = inputElement.closest('tr');
-            const caInput = row.querySelector('input[name="ca_scores"]');
-            const examInput = row.querySelector('input[name="exam_scores"]');
-            const totalCell = row.querySelector('.student-total');
-            const gradeCell = row.querySelector('.student-grade');
+    <div class="form-group">
+      <label for="term" style="font-weight:bold; display:block; margin-bottom:5px;">Academic Term:</label>
+      <select name="term" id="term" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">Select Term</option>
+        <option value="FIRST">FIRST TERM</option>
+        <option value="SECOND">SECOND TERM</option>
+        <option value="THIRD">THIRD TERM</option>
+      </select>
+    </div>
 
-            const ca = parseFloat(caInput.value) || 0;
-            const exam = parseFloat(examInput.value) || 0;
-            const total = ca + exam;
+    <div class="form-group">
+      <label for="class_name" style="font-weight:bold; display:block; margin-bottom:5px;">Class Category:</label>
+      <select name="class_name" id="class_name" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">Select Class</option>
+        <option value="JSS 1">JSS 1</option>
+        <option value="JSS 2">JSS 2</option>
+        <option value="JSS 3">JSS 3</option>
+        <option value="SSS 1">SSS 1</option>
+        <option value="SSS 2">SSS 2</option>
+        <option value="SSS 3">SSS 3</option>
+      </select>
+    </div>
 
-            totalCell.textContent = total.toFixed(1);
+    <button type="submit" class="btn btn-primary" style="align-self: flex-end; padding: 9px 20px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+      Load Roster
+    </button>
+  </form>
+</div>
 
-            // Assign WAEC Grades live on page change
-            let grade = 'F9';
-            if (total >= 75) grade = 'A1';
-            else if (total >= 70) grade = 'B2';
-            else if (total >= 65) grade = 'B3';
-            else if (total >= 60) grade = 'C4';
-            else if (total >= 55) grade = 'C5';
-            else if (total >= 50) grade = 'C6';
-            else if (total >= 45) grade = 'D7';
-            else if (total >= 40) grade = 'E8';
-
-            gradeCell.textContent = grade;
-        }
-    </script>
-</body>
-</html>
+<%- include('../partials/footer') %>
