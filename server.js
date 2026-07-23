@@ -34,3 +34,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`[SERVER] Success Academy System live on http://localhost:${PORT}`);
 });
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
