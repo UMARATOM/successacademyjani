@@ -31,15 +31,10 @@ exports.postRegister = (req, res) => {
   const first_name = nameParts[0];
   const last_name = nameParts.slice(1).join(' ') || '';
 
-  // 1. Inspect existing columns in 'students' table
+  // Inspect existing columns in 'students' table
   db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
-    if (pragmaErr) {
-      console.error("PRAGMA Error:", pragmaErr);
-    }
-
     const existingCols = (columns || []).map(c => c.name);
 
-    // List of required columns to add if missing
     const requiredCols = [
       { name: 'name', type: 'TEXT' },
       { name: 'first_name', type: 'TEXT' },
@@ -49,30 +44,60 @@ exports.postRegister = (req, res) => {
       { name: 'dob', type: 'TEXT' },
       { name: 'guardian_name', type: 'TEXT' },
       { name: 'guardian_phone', type: 'TEXT' },
+      { name: 'reg_number', type: 'TEXT' },
       { name: 'registration_number', type: 'TEXT' },
       { name: 'passport_path', type: 'TEXT' }
     ];
 
-    // Filter out columns that don't exist yet
     const missing = requiredCols.filter(c => !existingCols.includes(c.name));
-
     const addColumnPromises = missing.map(c => {
       return new Promise((resolve) => {
         db.run(`ALTER TABLE students ADD COLUMN ${c.name} ${c.type}`, () => resolve());
       });
     });
 
-    // 2. Wait for all missing columns to be created, then execute INSERT
     Promise.all(addColumnPromises).then(() => {
       const currentYear = new Date().getFullYear();
       db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
         const count = (row && row.count) ? row.count : 0;
         const nextNum = String(count + 1).padStart(3, '0');
-        const registration_number = `SAJ/${currentYear}/${nextNum}`;
+        const generatedRegNo = `SAJ/${currentYear}/${nextNum}`;
 
-        const sql = `INSERT INTO students (name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const params = [full_name, first_name, last_name, class_name, gender, dob, guardian_name, guardian_phone, registration_number];
+        // Match both 'reg_number' and 'registration_number' dynamically
+        const colsToInsert = ['class_name', 'gender', 'dob'];
+        const params = [class_name, gender, dob];
+
+        if (existingCols.includes('reg_number') || missing.some(m => m.name === 'reg_number')) {
+          colsToInsert.push('reg_number');
+          params.push(generatedRegNo);
+        }
+        if (existingCols.includes('registration_number') || missing.some(m => m.name === 'registration_number')) {
+          colsToInsert.push('registration_number');
+          params.push(generatedRegNo);
+        }
+        if (existingCols.includes('first_name') || missing.some(m => m.name === 'first_name')) {
+          colsToInsert.push('first_name');
+          params.push(first_name);
+        }
+        if (existingCols.includes('last_name') || missing.some(m => m.name === 'last_name')) {
+          colsToInsert.push('last_name');
+          params.push(last_name);
+        }
+        if (existingCols.includes('name') || missing.some(m => m.name === 'name')) {
+          colsToInsert.push('name');
+          params.push(full_name);
+        }
+        if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
+          colsToInsert.push('guardian_name');
+          params.push(guardian_name);
+        }
+        if (existingCols.includes('guardian_phone') || missing.some(m => m.name === 'guardian_phone')) {
+          colsToInsert.push('guardian_phone');
+          params.push(guardian_phone);
+        }
+
+        const placeholders = colsToInsert.map(() => '?').join(', ');
+        const sql = `INSERT INTO students (${colsToInsert.join(', ')}) VALUES (${placeholders})`;
 
         db.run(sql, params, function(dbErr) {
           if (dbErr) {
