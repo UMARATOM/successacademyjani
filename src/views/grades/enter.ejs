@@ -6,34 +6,34 @@
   <form action="/grades" method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
     <div class="form-group">
       <label for="session" style="font-weight:bold; display:block; margin-bottom:5px;">Academic Session:</label>
-      <select name="session" id="session" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+      <select name="session" id="session" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
         <option value="">Select Session</option>
-        <option value="2025/2026">2025/2026</option>
-        <option value="2026/2027">2026/2027</option>
-        <option value="2027/2028">2027/2028</option>
+        <option value="2025/2026" <%= (typeof selectedSession !== 'undefined' && selectedSession === '2025/2026') ? 'selected' : '' %>>2025/2026</option>
+        <option value="2026/2027" <%= (typeof selectedSession !== 'undefined' && selectedSession === '2026/2027') ? 'selected' : '' %>>2026/2027</option>
+        <option value="2027/2028" <%= (typeof selectedSession !== 'undefined' && selectedSession === '2027/2028') ? 'selected' : '' %>>2027/2028</option>
       </select>
     </div>
 
     <div class="form-group">
       <label for="term" style="font-weight:bold; display:block; margin-bottom:5px;">Academic Term:</label>
-      <select name="term" id="term" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+      <select name="term" id="term" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
         <option value="">Select Term</option>
-        <option value="FIRST">FIRST TERM</option>
-        <option value="SECOND">SECOND TERM</option>
-        <option value="THIRD">THIRD TERM</option>
+        <option value="FIRST" <%= (typeof selectedTerm !== 'undefined' && selectedTerm === 'FIRST') ? 'selected' : '' %>>FIRST TERM</option>
+        <option value="SECOND" <%= (typeof selectedTerm !== 'undefined' && selectedTerm === 'SECOND') ? 'selected' : '' %>>SECOND TERM</option>
+        <option value="THIRD" <%= (typeof selectedTerm !== 'undefined' && selectedTerm === 'THIRD') ? 'selected' : '' %>>THIRD TERM</option>
       </select>
     </div>
 
     <div class="form-group">
       <label for="class_name" style="font-weight:bold; display:block; margin-bottom:5px;">Class Category:</label>
-      <select name="class_name" id="class_name" required style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+      <select name="class_name" id="class_name" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
         <option value="">Select Class</option>
-        <option value="JSS 1">JSS 1</option>
-        <option value="JSS 2">JSS 2</option>
-        <option value="JSS 3">JSS 3</option>
-        <option value="SSS 1">SSS 1</option>
-        <option value="SSS 2">SSS 2</option>
-        <option value="SSS 3">SSS 3</option>
+        <option value="JSS 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 1') ? 'selected' : '' %>>JSS 1</option>
+        <option value="JSS 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 2') ? 'selected' : '' %>>JSS 2</option>
+        <option value="JSS 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 3') ? 'selected' : '' %>>JSS 3</option>
+        <option value="SSS 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'SSS 1') ? 'selected' : '' %>>SSS 1</option>
+        <option value="SSS 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'SSS 2') ? 'selected' : '' %>>SSS 2</option>
+        <option value="SSS 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'SSS 3') ? 'selected' : '' %>>SSS 3</option>
       </select>
     </div>
 
@@ -41,6 +41,31 @@
       Load Roster
     </button>
   </form>
+
+  <% if (typeof students !== 'undefined' && students.length > 0) { %>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff;">
+      <thead>
+        <tr style="background: #f2f2f2;">
+          <th style="border: 1px solid #ccc; padding: 10px;">Reg No</th>
+          <th style="border: 1px solid #ccc; padding: 10px;">Student Name</th>
+          <th style="border: 1px solid #ccc; padding: 10px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% students.forEach(function(student) { %>
+          <tr>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= student.registration_number %></td>
+            <td style="border: 1px solid #ccc; padding: 10px;"><%= student.first_name %> <%= student.last_name %></td>
+            <td style="border: 1px solid #ccc; padding: 10px; text-align: center;">
+              <a href="/grades/report-card/<%= student.id %>" style="color: #1a73e8; font-weight: bold; text-decoration: none;">View Report Card</a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } else if (typeof selectedClass !== 'undefined') { %>
+    <p style="margin-top: 20px; color: #666;">No students found for the selected criteria.</p>
+  <% } %>
 </div>
 
 <%- include('../partials/footer') %>
