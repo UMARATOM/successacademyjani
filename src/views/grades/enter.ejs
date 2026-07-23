@@ -63,7 +63,7 @@
         <% }); %>
       </tbody>
     </table>
-  <% } else if (typeof selectedClass !== 'undefined') { %>
+  <% } else if (typeof selectedClass !== 'undefined' && selectedClass !== '') { %>
     <p style="margin-top: 20px; color: #666;">No students found for the selected criteria.</p>
   <% } %>
 </div>
