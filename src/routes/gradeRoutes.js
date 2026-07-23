@@ -3,6 +3,7 @@ const router = express.Router();
 const gradeController = require('../controllers/gradeController');
 
 router.get('/', gradeController.getEnterGrades);
+router.get('/enter', gradeController.getEnterGrades);
 router.get('/report-card/:studentId', gradeController.getReportCard);
 router.post('/enter', gradeController.postEnterGrades);
 
