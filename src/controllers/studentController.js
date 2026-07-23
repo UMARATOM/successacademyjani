@@ -35,7 +35,10 @@ exports.postRegister = (req, res) => {
   db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
     const existingCols = (columns || []).map(c => c.name);
 
+    // List all potential columns so we can auto-create if missing
     const requiredCols = [
+      { name: 'fullname', type: 'TEXT' },
+      { name: 'full_name', type: 'TEXT' },
       { name: 'name', type: 'TEXT' },
       { name: 'first_name', type: 'TEXT' },
       { name: 'last_name', type: 'TEXT' },
@@ -63,18 +66,19 @@ exports.postRegister = (req, res) => {
         const nextNum = String(count + 1).padStart(3, '0');
         const generatedRegNo = `SAJ/${currentYear}/${nextNum}`;
 
-        // Match both 'reg_number' and 'registration_number' dynamically
         const colsToInsert = ['class_name', 'gender', 'dob'];
         const params = [class_name, gender, dob];
 
-        if (existingCols.includes('reg_number') || missing.some(m => m.name === 'reg_number')) {
-          colsToInsert.push('reg_number');
-          params.push(generatedRegNo);
-        }
-        if (existingCols.includes('registration_number') || missing.some(m => m.name === 'registration_number')) {
-          colsToInsert.push('registration_number');
-          params.push(generatedRegNo);
-        }
+        // Populate EVERY possible name column to satisfy all NOT NULL constraints
+        const nameCols = ['fullname', 'full_name', 'name'];
+        nameCols.forEach(col => {
+          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
+            colsToInsert.push(col);
+            params.push(full_name);
+          }
+        });
+
+        // First and Last Name
         if (existingCols.includes('first_name') || missing.some(m => m.name === 'first_name')) {
           colsToInsert.push('first_name');
           params.push(first_name);
@@ -83,10 +87,18 @@ exports.postRegister = (req, res) => {
           colsToInsert.push('last_name');
           params.push(last_name);
         }
-        if (existingCols.includes('name') || missing.some(m => m.name === 'name')) {
-          colsToInsert.push('name');
-          params.push(full_name);
+
+        // Registration Numbers
+        if (existingCols.includes('reg_number') || missing.some(m => m.name === 'reg_number')) {
+          colsToInsert.push('reg_number');
+          params.push(generatedRegNo);
         }
+        if (existingCols.includes('registration_number') || missing.some(m => m.name === 'registration_number')) {
+          colsToInsert.push('registration_number');
+          params.push(generatedRegNo);
+        }
+
+        // Guardian Information
         if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
           colsToInsert.push('guardian_name');
           params.push(guardian_name);
