@@ -35,14 +35,16 @@ exports.postRegister = (req, res) => {
   db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
     const existingCols = (columns || []).map(c => c.name);
 
-    // List all potential columns so we can auto-create if missing
+    // List all potential columns to auto-create if missing
     const requiredCols = [
       { name: 'fullname', type: 'TEXT' },
       { name: 'full_name', type: 'TEXT' },
       { name: 'name', type: 'TEXT' },
       { name: 'first_name', type: 'TEXT' },
       { name: 'last_name', type: 'TEXT' },
+      { name: 'class', type: 'TEXT' },
       { name: 'class_name', type: 'TEXT' },
+      { name: 'student_class', type: 'TEXT' },
       { name: 'gender', type: 'TEXT' },
       { name: 'dob', type: 'TEXT' },
       { name: 'guardian_name', type: 'TEXT' },
@@ -66,10 +68,19 @@ exports.postRegister = (req, res) => {
         const nextNum = String(count + 1).padStart(3, '0');
         const generatedRegNo = `SAJ/${currentYear}/${nextNum}`;
 
-        const colsToInsert = ['class_name', 'gender', 'dob'];
-        const params = [class_name, gender, dob];
+        const colsToInsert = ['gender', 'dob'];
+        const params = [gender, dob];
 
-        // Populate EVERY possible name column to satisfy all NOT NULL constraints
+        // Populate ALL class column variations to pass NOT NULL constraints
+        const classCols = ['class', 'class_name', 'student_class'];
+        classCols.forEach(col => {
+          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
+            colsToInsert.push(col);
+            params.push(class_name);
+          }
+        });
+
+        // Populate ALL name column variations
         const nameCols = ['fullname', 'full_name', 'name'];
         nameCols.forEach(col => {
           if (existingCols.includes(col) || missing.some(m => m.name === col)) {
@@ -78,7 +89,7 @@ exports.postRegister = (req, res) => {
           }
         });
 
-        // First and Last Name
+        // First & Last Name
         if (existingCols.includes('first_name') || missing.some(m => m.name === 'first_name')) {
           colsToInsert.push('first_name');
           params.push(first_name);
@@ -98,7 +109,7 @@ exports.postRegister = (req, res) => {
           params.push(generatedRegNo);
         }
 
-        // Guardian Information
+        // Guardian Info
         if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
           colsToInsert.push('guardian_name');
           params.push(guardian_name);

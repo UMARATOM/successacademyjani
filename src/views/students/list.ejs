@@ -26,7 +26,9 @@
             <td style="border: 1px solid #ccc; padding: 10px;">
               <%= student.fullname || student.full_name || student.name || (student.first_name + ' ' + student.last_name) %>
             </td>
-            <td style="border: 1px solid #ccc; padding: 10px;"><%= student.class_name || 'Unassigned' %></td>
+            <td style="border: 1px solid #ccc; padding: 10px;">
+              <%= student.class || student.class_name || student.student_class || 'Unassigned' %>
+            </td>
             <td style="border: 1px solid #ccc; padding: 10px;"><%= student.gender || '-' %></td>
             <td style="border: 1px solid #ccc; padding: 10px; text-align: center;">
               <a href="/grades/report-card/<%= student.id %>" style="color: #1a73e8; font-weight: bold; text-decoration: none;">View Report Card</a>
