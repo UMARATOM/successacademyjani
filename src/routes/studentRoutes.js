@@ -2,12 +2,19 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const studentController = require('../controllers/studentController');
 
-// Disk storage so uploaded files keep their extension
+// Ensure destination folder exists safely
+const uploadDir = path.join(__dirname, '../../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Disk storage setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/');
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -26,7 +33,6 @@ router.post('/register', upload.fields([
 
 router.get('/edit/:id', studentController.getEdit);
 
-// Enable file upload handling on student edit POST submit
 router.post('/edit/:id', upload.fields([
   { name: 'passport', maxCount: 1 }
 ]), studentController.postEdit);
