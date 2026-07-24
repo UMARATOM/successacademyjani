@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-// Ensure grades table exists cleanly
 const fixGradesTable = (callback) => {
   db.run(`CREATE TABLE IF NOT EXISTS grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,7 +16,6 @@ const fixGradesTable = (callback) => {
   )`, [], () => callback());
 };
 
-// Compute Letter Grade & Remark based on Nigerian Grading System
 const calculateGrade = (total) => {
   if (total >= 70) return { grade: 'A', remark: 'EXCELLENT' };
   if (total >= 60) return { grade: 'B', remark: 'VERY GOOD' };
@@ -27,7 +25,6 @@ const calculateGrade = (total) => {
   return { grade: 'F', remark: 'FAIL' };
 };
 
-// GET Main Gradebook Interface
 exports.getGradebook = (req, res) => {
   const selectedClass = req.query.class_filter || 'JSS 1';
   const selectedSubjectId = req.query.subject_id || '';
@@ -35,7 +32,6 @@ exports.getGradebook = (req, res) => {
   const selectedSession = req.query.session_year || '2025/2026';
 
   fixGradesTable(() => {
-    // 1. Fetch Subjects safely
     db.all("SELECT * FROM subjects ORDER BY subject_name ASC", [], (err, allSubjects) => {
       const subjects = (allSubjects || []).filter(sub => {
         const cat = (sub.class_category || 'ALL').toString();
@@ -46,7 +42,6 @@ exports.getGradebook = (req, res) => {
         return false;
       });
 
-      // 2. Fetch Students safely
       db.all("SELECT * FROM students ORDER BY id DESC", [], (err, allStudents) => {
         const cleanClass = selectedClass.toLowerCase().replace(/\s+/g, '');
         const students = (allStudents || []).filter(s => {
@@ -67,7 +62,6 @@ exports.getGradebook = (req, res) => {
           });
         }
 
-        // 3. Fetch Grades safely
         db.all(
           "SELECT * FROM grades WHERE subject_id = ? AND term = ? AND session_year = ?",
           [selectedSubjectId, selectedTerm, selectedSession],
@@ -94,19 +88,23 @@ exports.getGradebook = (req, res) => {
   });
 };
 
-// POST Save Assessment Scores Batch
 exports.postSaveGrades = (req, res) => {
-  const { class_filter, subject_id, term, session_year, ca1, ca2, exam } = req.body || {};
+  const body = req.body || {};
+  const { class_filter, subject_id, term, session_year } = body;
+  let studentIds = body['student_ids[]'] || body.student_ids || [];
 
-  if (!subject_id) return res.redirect('/grades');
+  if (!Array.isArray(studentIds)) {
+    studentIds = [studentIds];
+  }
+
+  if (!subject_id || studentIds.length === 0) return res.redirect('/grades');
 
   fixGradesTable(() => {
-    const studentIds = Object.keys(ca1 || {});
     const promises = studentIds.map(studentId => {
       return new Promise((resolve) => {
-        const score1 = Math.min(20, Math.max(0, parseFloat(ca1[studentId]) || 0));
-        const score2 = Math.min(20, Math.max(0, parseFloat(ca2[studentId]) || 0));
-        const scoreExam = Math.min(60, Math.max(0, parseFloat(exam[studentId]) || 0));
+        const score1 = Math.min(20, Math.max(0, parseFloat(body[`ca1_${studentId}`]) || 0));
+        const score2 = Math.min(20, Math.max(0, parseFloat(body[`ca2_${studentId}`]) || 0));
+        const scoreExam = Math.min(60, Math.max(0, parseFloat(body[`exam_${studentId}`]) || 0));
         const total = score1 + score2 + scoreExam;
         const { grade, remark } = calculateGrade(total);
 
@@ -138,7 +136,6 @@ exports.postSaveGrades = (req, res) => {
   });
 };
 
-// GET Official Report Card for Student
 exports.getReportCard = (req, res) => {
   const studentId = req.params.studentId;
   const selectedTerm = req.query.term || '1st Term';

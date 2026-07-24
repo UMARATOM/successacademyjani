@@ -76,7 +76,21 @@
           <tbody>
             <% students.forEach(function(student) { %>
               <% const g = (gradesMap && gradesMap[student.id]) ? gradesMap[student.id] : {}; %>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
+              <% 
+                const score1 = g.ca1 !== undefined ? g.ca1 : 0;
+                const score2 = g.ca2 !== undefined ? g.ca2 : 0;
+                const scoreExam = g.exam !== undefined ? g.exam : 0;
+                const calculatedTotal = score1 + score2 + scoreExam;
+                let calculatedGrade = '-';
+                if (calculatedTotal >= 70) calculatedGrade = 'A';
+                else if (calculatedTotal >= 60) calculatedGrade = 'B';
+                else if (calculatedTotal >= 50) calculatedGrade = 'C';
+                else if (calculatedTotal >= 45) calculatedGrade = 'D';
+                else if (calculatedTotal >= 40) calculatedGrade = 'E';
+                else if (calculatedTotal > 0) calculatedGrade = 'F';
+              %>
+              <tr style="border-bottom: 1px solid #e2e8f0;" class="student-row" data-student-id="<%= student.id %>">
+                <input type="hidden" name="student_ids[]" value="<%= student.id %>">
                 <td style="padding: 12px; font-weight: bold; color: #2b6cb0;">
                   <%= student.reg_number || student.registration_number || 'N/A' %>
                 </td>
@@ -84,20 +98,20 @@
                   <%= student.fullname || student.full_name || student.name %>
                 </td>
                 <td style="padding: 10px; text-align: center;">
-                  <input type="number" step="0.5" min="0" max="20" name="ca1[<%= student.id %>]" value="<%= g.ca1 !== undefined ? g.ca1 : 0 %>" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
+                  <input type="number" step="0.5" min="0" max="20" name="ca1_<%= student.id %>" value="<%= score1 %>" class="score-input ca1-input" oninput="calculateLiveTotal('<%= student.id %>')" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
                 </td>
                 <td style="padding: 10px; text-align: center;">
-                  <input type="number" step="0.5" min="0" max="20" name="ca2[<%= student.id %>]" value="<%= g.ca2 !== undefined ? g.ca2 : 0 %>" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
+                  <input type="number" step="0.5" min="0" max="20" name="ca2_<%= student.id %>" value="<%= score2 %>" class="score-input ca2-input" oninput="calculateLiveTotal('<%= student.id %>')" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
                 </td>
                 <td style="padding: 10px; text-align: center;">
-                  <input type="number" step="0.5" min="0" max="60" name="exam[<%= student.id %>]" value="<%= g.exam !== undefined ? g.exam : 0 %>" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
+                  <input type="number" step="0.5" min="0" max="60" name="exam_<%= student.id %>" value="<%= scoreExam %>" class="score-input exam-input" oninput="calculateLiveTotal('<%= student.id %>')" style="width: 70px; padding: 6px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold;">
                 </td>
-                <td style="padding: 12px; text-align: center; font-weight: bold; color: #1a365d; font-size: 15px;">
-                  <%= g.total !== undefined ? g.total : 0 %>
+                <td style="padding: 12px; text-align: center; font-weight: bold; color: #1a365d; font-size: 16px;" id="total_<%= student.id %>">
+                  <%= calculatedTotal %>
                 </td>
                 <td style="padding: 12px; text-align: center;">
-                  <span style="background: #edf2f7; color: #2c5282; padding: 4px 10px; border-radius: 12px; font-weight: bold;">
-                    <%= g.grade || '-' %>
+                  <span id="grade_badge_<%= student.id %>" style="background: #edf2f7; color: #2c5282; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px;">
+                    <%= calculatedGrade %>
                   </span>
                 </td>
               </tr>
@@ -120,5 +134,27 @@
     <p style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; color: #4a5568;">No students registered for <%= selectedClass %> yet.</p>
   <% } %>
 </div>
+
+<script>
+  function calculateLiveTotal(studentId) {
+    const ca1Val = parseFloat(document.querySelector(`input[name="ca1_${studentId}"]`).value) || 0;
+    const ca2Val = parseFloat(document.querySelector(`input[name="ca2_${studentId}"]`).value) || 0;
+    const examVal = parseFloat(document.querySelector(`input[name="exam_${studentId}"]`).value) || 0;
+
+    const total = Math.min(100, ca1Val + ca2Val + examVal);
+    document.getElementById(`total_${studentId}`).innerText = total;
+
+    let grade = '-';
+    if (total >= 70) grade = 'A';
+    else if (total >= 60) grade = 'B';
+    else if (total >= 50) grade = 'C';
+    else if (total >= 45) grade = 'D';
+    else if (total >= 40) grade = 'E';
+    else if (total > 0) grade = 'F';
+
+    const gradeBadge = document.getElementById(`grade_badge_${studentId}`);
+    gradeBadge.innerText = grade;
+  }
+</script>
 
 <%- include('../partials/footer') %>
