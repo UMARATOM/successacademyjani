@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const fs = require('fs');
 
 exports.getStudents = (req, res) => {
   db.all("SELECT * FROM students ORDER BY id DESC", [], (err, rows) => {
@@ -30,26 +31,28 @@ exports.postEdit = (req, res) => {
   const class_name = body.class_name || '';
   const gender = body.gender || 'Male';
 
-  let passport_path = null;
+  let passportData = null;
+
+  // Convert uploaded image directly into Base64 String
   if (req.files && req.files['passport'] && req.files['passport'][0]) {
-    passport_path = req.files['passport'][0].filename;
+    const file = req.files['passport'][0];
+    const fileBuffer = fs.readFileSync(file.path);
+    passportData = `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
   }
 
   let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?`;
   let params = [full_name, full_name, full_name, class_name, class_name, gender];
 
-  if (passport_path) {
+  if (passportData) {
     sql += `, passport_path = ?`;
-    params.push(passport_path);
+    params.push(passportData);
   }
 
   sql += ` WHERE id = ?`;
   params.push(studentId);
 
   db.run(sql, params, (err) => {
-    if (err) {
-      console.error("Error updating student:", err);
-    }
+    if (err) console.error("Error updating student:", err);
     res.redirect('/students');
   });
 };
