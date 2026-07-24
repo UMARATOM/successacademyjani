@@ -4,11 +4,6 @@ const path = require('path');
 
 const connectionString = process.env.DATABASE_URL;
 
-const convertPlaceholders = (text) => {
-  let index = 1;
-  return text.replace(/\?/g, () => `$${index++}`);
-};
-
 if (connectionString) {
   const pool = new Pool({
     connectionString: connectionString,
@@ -55,27 +50,38 @@ if (connectionString) {
 
   initPgDb();
 
+  const convertQuery = (text) => {
+    let index = 1;
+    return text.replace(/\?/g, () => `$${index++}`);
+  };
+
   module.exports = {
-    query: (text, params, callback) => pool.query(convertPlaceholders(text), params, callback),
+    query: (text, params, callback) => {
+      if (typeof params === 'function') { callback = params; params = []; }
+      pool.query(convertQuery(text), params || [], callback);
+    },
     all: (text, params, callback) => {
-      pool.query(convertPlaceholders(text), params, (err, res) => {
-        callback(err, res ? res.rows : []);
+      if (typeof params === 'function') { callback = params; params = []; }
+      pool.query(convertQuery(text), params || [], (err, res) => {
+        if (callback) callback(err, res ? res.rows : []);
       });
     },
     get: (text, params, callback) => {
-      pool.query(convertPlaceholders(text), params, (err, res) => {
-        callback(err, res && res.rows.length > 0 ? res.rows[0] : null);
+      if (typeof params === 'function') { callback = params; params = []; }
+      pool.query(convertQuery(text), params || [], (err, res) => {
+        if (callback) callback(err, res && res.rows.length > 0 ? res.rows[0] : null);
       });
     },
     run: (text, params, callback) => {
-      pool.query(convertPlaceholders(text), params, (err, res) => {
+      if (typeof params === 'function') { callback = params; params = []; }
+      pool.query(convertQuery(text), params || [], (err, res) => {
         if (callback) callback(err, res);
       });
     }
   };
 
 } else {
-  console.log('[DATABASE] Using local SQLite fallback');
+  console.log('[DATABASE] Using local SQLite database');
   const dbPath = path.join(__dirname, '../../data', 'database.sqlite');
   const db = new sqlite3.Database(dbPath);
   module.exports = db;

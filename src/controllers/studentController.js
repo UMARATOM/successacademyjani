@@ -7,8 +7,8 @@ exports.getStudents = (req, res) => {
   let params = [];
 
   if (selectedClass !== 'ALL') {
-    sql += " WHERE class = $1 OR class_name = $1";
-    params = [selectedClass];
+    sql += " WHERE class = ? OR class_name = ?";
+    params = [selectedClass, selectedClass];
   }
 
   sql += " ORDER BY id DESC";
@@ -73,7 +73,7 @@ exports.postRegister = (req, res) => {
         fullname, full_name, name, class, class_name, gender, dob, session_year,
         guardian_name, guardian_phone, reg_number, registration_number,
         passport_path, birth_cert, primary_cert, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -114,7 +114,7 @@ exports.postRegister = (req, res) => {
 
 exports.getEdit = (req, res) => {
   const id = req.params.id;
-  db.get("SELECT * FROM students WHERE id = $1", [id], (err, student) => {
+  db.get("SELECT * FROM students WHERE id = ?", [id], (err, student) => {
     if (err || !student) return res.redirect('/students');
     res.render('students/edit', { student, error: null, user: req.session ? req.session.user : null });
   });
@@ -126,13 +126,13 @@ exports.postEdit = (req, res) => {
 
   const sql = `
     UPDATE students SET 
-      fullname = $1, full_name = $1, name = $1,
-      class = $2, class_name = $2,
-      gender = $3, guardian_phone = $4, reg_number = $5, registration_number = $5
-    WHERE id = $6
+      fullname = ?, full_name = ?, name = ?,
+      class = ?, class_name = ?,
+      gender = ?, guardian_phone = ?, reg_number = ?, registration_number = ?
+    WHERE id = ?
   `;
 
-  db.run(sql, [fullname, student_class, gender, guardian_phone, reg_number, id], (err) => {
+  db.run(sql, [fullname, fullname, fullname, student_class, student_class, gender, guardian_phone, reg_number, reg_number, id], (err) => {
     if (err) console.error("Error updating student:", err);
     res.redirect('/students');
   });
@@ -140,7 +140,7 @@ exports.postEdit = (req, res) => {
 
 exports.getDelete = (req, res) => {
   const id = req.params.id;
-  db.run("DELETE FROM students WHERE id = $1", [id], () => {
+  db.run("DELETE FROM students WHERE id = ?", [id], () => {
     res.redirect('/students');
   });
 };
