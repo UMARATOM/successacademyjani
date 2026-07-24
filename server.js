@@ -1,70 +1,45 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: 'success_academy_secret_key_2026',
-  resave: false,
-  saveUninitialized: false
-}));
+// Automatically create uploads folder if it doesn't exist
+const uploadsDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadsDir)){
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Middleware
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Session
+app.use(session({
+  secret: 'success_academy_secret_key',
+  resave: false,
+  saveUninitialized: false
+}));
 
-const dashboardController = require('./src/controllers/dashboardController');
-
+// Routes
 const indexRoutes = require('./src/routes/indexRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
+const gradeRoutes = require('./src/routes/gradeRoutes');
 const teacherRoutes = require('./src/routes/teacherRoutes');
 const subjectRoutes = require('./src/routes/subjectRoutes');
-const gradeRoutes = require('./src/routes/gradeRoutes');
-
-// Auth Middleware
-const requireAuth = (req, res, next) => {
-  if (req.session && req.session.user) return next();
-  res.redirect('/login');
-};
-
-// Admin Only Middleware
-const requireAdmin = (req, res, next) => {
-  if (req.session && req.session.user && req.session.user.role === 'Administrator') return next();
-  res.redirect('/students');
-};
 
 app.use('/', indexRoutes);
-app.use('/students', requireAuth, studentRoutes);
-app.use('/teachers', requireAuth, requireAdmin, teacherRoutes);
-app.use('/subjects', requireAuth, requireAdmin, subjectRoutes);
-app.use('/grades', requireAuth, gradeRoutes);
+app.use('/students', studentRoutes);
+app.use('/grades', gradeRoutes);
+app.use('/teachers', teacherRoutes);
+app.use('/subjects', subjectRoutes);
 
-app.get('/dashboard', requireAuth, requireAdmin, dashboardController.getDashboard);
-
-app.get('/', (req, res) => {
-  if (req.session && req.session.user) {
-    if (req.session.user.role === 'Administrator') {
-      res.redirect('/dashboard');
-    } else {
-      res.redirect('/students');
-    }
-  } else {
-    res.redirect('/login');
-  }
-});
-
-// Error handling middleware to print real errors to logs instead of generic Internal Server Error
-app.use((err, req, res, next) => {
-  console.error('[EXPRESS ERROR]:', err.stack || err);
-  res.status(500).send(`Server Error Details: ${err.message || err}`);
-});
-
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`[SERVER] Success Academy System running on port ${PORT}`);
 });
