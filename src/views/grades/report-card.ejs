@@ -38,7 +38,7 @@
           </tr>
           <tr>
             <td style="padding: 5px 0; font-weight: bold; color: #4a5568;">Class Category:</td>
-            <td style="padding: 5px 0;"><%= student.class || student.class_name || 'JSS 1' %></td>
+            <td style="padding: 5px 0; font-weight: bold;"><%= student.class || student.class_name || 'JSS 1' %></td>
             <td style="padding: 5px 0; font-weight: bold; color: #4a5568;">Gender:</td>
             <td style="padding: 5px 0;"><%= student.gender || 'Male' %></td>
           </tr>
@@ -47,6 +47,12 @@
             <td style="padding: 5px 0;"><%= session_year %></td>
             <td style="padding: 5px 0; font-weight: bold; color: #4a5568;">Term:</td>
             <td style="padding: 5px 0; font-weight: bold; color: #2b6cb0;"><%= term %></td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; font-weight: bold; color: #4a5568;">Class Position:</td>
+            <td style="padding: 5px 0; font-weight: bold; color: #d69e2e; font-size: 15px;"><%= positionText %></td>
+            <td style="padding: 5px 0; font-weight: bold; color: #4a5568;">No. in Class:</td>
+            <td style="padding: 5px 0; font-weight: bold; color: #1a365d;"><%= totalStudentsInClass %> Students</td>
           </tr>
         </table>
       </div>
@@ -95,7 +101,7 @@
     </table>
 
     <!-- Performance Summary -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; text-align: center;">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; text-align: center;">
       <div style="border: 1px solid #cbd5e0; padding: 10px; border-radius: 6px; background: #f7fafc;">
         <span style="display: block; font-size: 11px; color: #718096; font-weight: bold;">TOTAL SUBJECTS</span>
         <strong style="font-size: 18px; color: #1a365d;"><%= subjectCount %></strong>
@@ -107,6 +113,10 @@
       <div style="border: 1px solid #cbd5e0; padding: 10px; border-radius: 6px; background: #f7fafc;">
         <span style="display: block; font-size: 11px; color: #718096; font-weight: bold;">OVERALL AVERAGE</span>
         <strong style="font-size: 18px; color: #2b6cb0;"><%= overallAverage %>%</strong>
+      </div>
+      <div style="border: 1px solid #cbd5e0; padding: 10px; border-radius: 6px; background: #f7fafc;">
+        <span style="display: block; font-size: 11px; color: #718096; font-weight: bold;">CLASS POSITION</span>
+        <strong style="font-size: 18px; color: #d69e2e;"><%= positionText %></strong>
       </div>
     </div>
 
