@@ -1,6 +1,6 @@
 const db = require('../config/database');
 
-// Helper to ensure grades table exists
+// Ensure grades table exists cleanly
 const fixGradesTable = (callback) => {
   db.run(`CREATE TABLE IF NOT EXISTS grades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,18 +35,20 @@ exports.getGradebook = (req, res) => {
   const selectedSession = req.query.session_year || '2025/2026';
 
   fixGradesTable(() => {
-    // 1. Get Subjects matching the selected class
-    let extraCondition = "";
-    if (selectedClass.startsWith("JSS")) extraCondition = " OR class_category = 'All JSS Classes'";
-    else if (selectedClass.startsWith("Primary")) extraCondition = " OR class_category = 'All Primary Classes'";
-    else if (selectedClass.startsWith("Nursery")) extraCondition = " OR class_category = 'All Nursery Classes'";
+    // 1. Fetch Subjects safely
+    db.all("SELECT * FROM subjects ORDER BY subject_name ASC", [], (err, allSubjects) => {
+      const subjects = (allSubjects || []).filter(sub => {
+        const cat = (sub.class_category || 'ALL').toString();
+        if (cat === 'ALL' || cat === selectedClass) return true;
+        if (selectedClass.startsWith('JSS') && cat === 'All JSS Classes') return true;
+        if (selectedClass.startsWith('Primary') && cat === 'All Primary Classes') return true;
+        if (selectedClass.startsWith('Nursery') && cat === 'All Nursery Classes') return true;
+        return false;
+      });
 
-    const subjectSql = `SELECT * FROM subjects WHERE class_category = ? OR class_category = 'ALL'${extraCondition} ORDER BY subject_name ASC`;
-    
-    db.all(subjectSql, [selectedClass], (err, subjects) => {
-      // 2. Fetch Students in the selected class
-      const cleanClass = selectedClass.toLowerCase().replace(/\s+/g, '');
+      // 2. Fetch Students safely
       db.all("SELECT * FROM students ORDER BY id DESC", [], (err, allStudents) => {
+        const cleanClass = selectedClass.toLowerCase().replace(/\s+/g, '');
         const students = (allStudents || []).filter(s => {
           const sClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
           return sClass.includes(cleanClass);
@@ -55,7 +57,7 @@ exports.getGradebook = (req, res) => {
         if (!selectedSubjectId || subjects.length === 0) {
           return res.render('grades/gradebook', {
             subjects: subjects || [],
-            students: students,
+            students: students || [],
             gradesMap: {},
             selectedClass,
             selectedSubjectId,
@@ -65,7 +67,7 @@ exports.getGradebook = (req, res) => {
           });
         }
 
-        // 3. Fetch existing grades for this subject, term, and session
+        // 3. Fetch Grades safely
         db.all(
           "SELECT * FROM grades WHERE subject_id = ? AND term = ? AND session_year = ?",
           [selectedSubjectId, selectedTerm, selectedSession],
@@ -77,7 +79,7 @@ exports.getGradebook = (req, res) => {
 
             res.render('grades/gradebook', {
               subjects: subjects || [],
-              students: students,
+              students: students || [],
               gradesMap: gradesMap,
               selectedClass,
               selectedSubjectId,
@@ -145,7 +147,6 @@ exports.getReportCard = (req, res) => {
   db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
     if (err || !student) return res.redirect('/students');
 
-    // Fetch all grade records for this student for the term
     const sql = `
       SELECT g.*, s.subject_name, s.subject_code 
       FROM grades g 
