@@ -1,38 +1,25 @@
 const db = require('../config/database');
-const fs = require('fs');
 
 exports.getStudents = (req, res) => {
-  const selectedClass = req.query.class_filter ? req.query.class_filter.trim() : 'ALL';
-  
-  db.all("SELECT * FROM students ORDER BY id DESC", [], (err, allRows) => {
-    if (err) {
-      console.error("Error fetching students:", err);
-      return res.render('students/list', { students: [], selectedClass, user: req.session ? req.session.user : null });
-    }
+  const selectedClass = req.query.class_filter || 'ALL';
 
-    let filteredRows = allRows || [];
+  let sql = "SELECT * FROM students";
+  let params = [];
 
-    if (selectedClass !== 'ALL' && selectedClass !== '') {
-      const searchTarget = selectedClass.toLowerCase().replace(/\s+/g, '');
-      filteredRows = filteredRows.filter(s => {
-        const studentClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
-        return studentClass.includes(searchTarget);
-      });
-    }
+  if (selectedClass !== 'ALL') {
+    sql += " WHERE class = $1 OR class_name = $1";
+    params = [selectedClass];
+  }
 
-    res.render('students/list', { 
-      students: filteredRows, 
+  sql += " ORDER BY id DESC";
+
+  db.all(sql, params, (err, rows) => {
+    if (err) console.error("Error fetching students:", err);
+    res.render('students/list', {
+      students: rows || [],
       selectedClass: selectedClass,
-      user: req.session ? req.session.user : null 
+      user: req.session ? req.session.user : null
     });
-  });
-};
-
-exports.getStudentDetails = (req, res) => {
-  const studentId = req.params.id;
-  db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
-    if (err || !student) return res.redirect('/students');
-    res.render('students/view-details', { student: student, user: req.session ? req.session.user : null });
   });
 };
 
@@ -41,168 +28,119 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = (req, res) => {
-  const body = req.body || {};
-  const full_name = body.full_name ? body.full_name.trim() : '';
-  const class_name = body.class_name || '';
-  const gender = body.gender || 'Male';
-  const dob = body.dob || '';
-  const session_year = body.session_year || '2025/2026';
-  const guardian_name = body.guardian_name || '';
-  const guardian_phone = body.guardian_phone || '';
+  const {
+    fullname, full_name, name,
+    student_class, class_name, class: rawClass,
+    gender, dob, session_year,
+    guardian_name, guardian_phone,
+    reg_number, registration_number
+  } = req.body || {};
 
-  const getBase64 = (fileArray) => {
-    if (fileArray && fileArray[0]) {
-      const file = fileArray[0];
-      const buffer = fs.readFileSync(file.path);
-      return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
-    }
-    return '';
-  };
+  const cleanName = (fullname || full_name || name || '').trim();
+  const cleanClass = (student_class || class_name || rawClass || 'JSS 1').trim();
+  const cleanGender = (gender || 'Male').trim();
+  const cleanDob = (dob || '').trim();
+  const cleanSession = (session_year || '2025/2026').trim();
+  const cleanGuardian = (guardian_name || '').trim();
+  const cleanPhone = (guardian_phone || '').trim();
+  let cleanReg = (reg_number || registration_number || '').trim();
 
-  let passport_path = getBase64(req.files ? req.files['passport'] : null);
-  let birth_cert = getBase64(req.files ? req.files['birth_certificate'] : null);
-  let primary_cert = getBase64(req.files ? req.files['primary_certificate'] : null);
-
-  if (!full_name || !class_name) {
-    return res.render('students/register', { 
-      error: 'Student Full Name and Class are required.', 
-      user: req.session ? req.session.user : null 
+  if (!cleanName) {
+    return res.render('students/register', {
+      error: 'Student Full Name is required.',
+      user: req.session ? req.session.user : null
     });
   }
 
-  db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
-    const existingCols = (columns || []).map(c => c.name);
-    const requiredCols = [
-      { name: 'fullname', type: 'TEXT' },
-      { name: 'full_name', type: 'TEXT' },
-      { name: 'name', type: 'TEXT' },
-      { name: 'class', type: 'TEXT' },
-      { name: 'class_name', type: 'TEXT' },
-      { name: 'gender', type: 'TEXT' },
-      { name: 'dob', type: 'TEXT' },
-      { name: 'session_year', type: 'TEXT' },
-      { name: 'guardian_name', type: 'TEXT' },
-      { name: 'guardian_phone', type: 'TEXT' },
-      { name: 'reg_number', type: 'TEXT' },
-      { name: 'registration_number', type: 'TEXT' },
-      { name: 'passport_path', type: 'TEXT' },
-      { name: 'birth_cert', type: 'TEXT' },
-      { name: 'primary_cert', type: 'TEXT' },
-      { name: 'status', type: 'TEXT' }
+  let passport_path = '';
+  if (req.files && req.files.passport && req.files.passport[0]) {
+    passport_path = req.files.passport[0].filename;
+  }
+
+  let birth_cert = '';
+  if (req.files && req.files.birth_cert && req.files.birth_cert[0]) {
+    birth_cert = req.files.birth_cert[0].filename;
+  }
+
+  let primary_cert = '';
+  if (req.files && req.files.primary_cert && req.files.primary_cert[0]) {
+    primary_cert = req.files.primary_cert[0].filename;
+  }
+
+  const completeInsertion = (finalRegNo) => {
+    const sql = `
+      INSERT INTO students (
+        fullname, full_name, name, class, class_name, gender, dob, session_year,
+        guardian_name, guardian_phone, reg_number, registration_number,
+        passport_path, birth_cert, primary_cert, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+    `;
+
+    const values = [
+      cleanName, cleanName, cleanName,
+      cleanClass, cleanClass,
+      cleanGender, cleanDob, cleanSession,
+      cleanGuardian, cleanPhone,
+      finalRegNo, finalRegNo,
+      passport_path, birth_cert, primary_cert,
+      'Active'
     ];
 
-    const missing = requiredCols.filter(c => !existingCols.includes(c.name));
-    const promises = missing.map(c => new Promise(resolve => db.run(`ALTER TABLE students ADD COLUMN ${c.name} ${c.type}`, () => resolve())));
-
-    Promise.all(promises).then(() => {
-      const currentYear = new Date().getFullYear();
-      db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
-        const count = (row && row.count) ? row.count : 0;
-        const regNo = `SAJ/JS/${currentYear}/${String(count + 1).padStart(3, '0')}`;
-
-        const cols = ['gender', 'dob', 'session_year', 'status'];
-        const params = [gender, dob, session_year, 'Active'];
-
-        if (passport_path) { cols.push('passport_path'); params.push(passport_path); }
-        if (birth_cert) { cols.push('birth_cert'); params.push(birth_cert); }
-        if (primary_cert) { cols.push('primary_cert'); params.push(primary_cert); }
-
-        ['fullname', 'full_name', 'name'].forEach(col => {
-          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
-            cols.push(col); params.push(full_name);
-          }
+    db.run(sql, values, (err) => {
+      if (err) {
+        console.error("Error registering student:", err);
+        return res.render('students/register', {
+          error: 'Failed to register student. Please try again.',
+          user: req.session ? req.session.user : null
         });
-
-        ['class', 'class_name'].forEach(col => {
-          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
-            cols.push(col); params.push(class_name);
-          }
-        });
-
-        ['reg_number', 'registration_number'].forEach(col => {
-          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
-            cols.push(col); params.push(regNo);
-          }
-        });
-
-        if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
-          cols.push('guardian_name'); params.push(guardian_name);
-        }
-        if (existingCols.includes('guardian_phone') || missing.some(m => m.name === 'guardian_phone')) {
-          cols.push('guardian_phone'); params.push(guardian_phone);
-        }
-
-        const placeholders = cols.map(() => '?').join(', ');
-        db.run(`INSERT INTO students (${cols.join(', ')}) VALUES (${placeholders})`, params, (dbErr) => {
-          if (dbErr) console.error("Database insert error:", dbErr);
-          res.redirect('/students');
-        });
-      });
+      }
+      res.redirect('/students');
     });
-  });
+  };
+
+  if (!cleanReg) {
+    db.all("SELECT id FROM students", [], (err, rows) => {
+      const nextId = (rows ? rows.length : 0) + 1;
+      const formattedNumber = String(nextId).padStart(3, '0');
+      let prefix = 'SAJ/JS/2026/';
+      if (cleanClass.startsWith('Primary')) prefix = 'SAJ/PR/2026/';
+      if (cleanClass.startsWith('Nursery')) prefix = 'SAJ/NR/2026/';
+      completeInsertion(`${prefix}${formattedNumber}`);
+    });
+  } else {
+    completeInsertion(cleanReg);
+  }
 };
 
 exports.getEdit = (req, res) => {
-  const studentId = req.params.id;
-  db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
+  const id = req.params.id;
+  db.get("SELECT * FROM students WHERE id = $1", [id], (err, student) => {
     if (err || !student) return res.redirect('/students');
-    res.render('students/edit', { student: student, error: null, user: req.session ? req.session.user : null });
+    res.render('students/edit', { student, error: null, user: req.session ? req.session.user : null });
   });
 };
 
 exports.postEdit = (req, res) => {
-  const studentId = req.params.id;
-  const body = req.body || {};
-  const full_name = body.full_name ? body.full_name.trim() : '';
-  const class_name = body.class_name || '';
-  const gender = body.gender || 'Male';
-  const dob = body.dob || '';
-  const session_year = body.session_year || '2025/2026';
-  const guardian_name = body.guardian_name || '';
-  const guardian_phone = body.guardian_phone || '';
-  const status = body.status || 'Active';
+  const id = req.params.id;
+  const { fullname, student_class, gender, guardian_phone, reg_number } = req.body || {};
 
-  const getBase64 = (fileArray) => {
-    if (fileArray && fileArray[0]) {
-      const file = fileArray[0];
-      const buffer = fs.readFileSync(file.path);
-      return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
-    }
-    return null;
-  };
+  const sql = `
+    UPDATE students SET 
+      fullname = $1, full_name = $1, name = $1,
+      class = $2, class_name = $2,
+      gender = $3, guardian_phone = $4, reg_number = $5, registration_number = $5
+    WHERE id = $6
+  `;
 
-  let passport_path = getBase64(req.files ? req.files['passport'] : null);
-  let birth_cert = getBase64(req.files ? req.files['birth_certificate'] : null);
-  let primary_cert = getBase64(req.files ? req.files['primary_certificate'] : null);
-
-  let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?, dob = ?, session_year = ?, guardian_name = ?, guardian_phone = ?, status = ?`;
-  let params = [full_name, full_name, full_name, class_name, class_name, gender, dob, session_year, guardian_name, guardian_phone, status];
-
-  if (passport_path) {
-    sql += `, passport_path = ?`;
-    params.push(passport_path);
-  }
-  if (birth_cert) {
-    sql += `, birth_cert = ?`;
-    params.push(birth_cert);
-  }
-  if (primary_cert) {
-    sql += `, primary_cert = ?`;
-    params.push(primary_cert);
-  }
-
-  sql += ` WHERE id = ?`;
-  params.push(studentId);
-
-  db.run(sql, params, (err) => {
+  db.run(sql, [fullname, student_class, gender, guardian_phone, reg_number, id], (err) => {
     if (err) console.error("Error updating student:", err);
     res.redirect('/students');
   });
 };
 
 exports.getDelete = (req, res) => {
-  const studentId = req.params.id;
-  db.run("DELETE FROM students WHERE id = ?", [studentId], () => {
+  const id = req.params.id;
+  db.run("DELETE FROM students WHERE id = $1", [id], () => {
     res.redirect('/students');
   });
 };
