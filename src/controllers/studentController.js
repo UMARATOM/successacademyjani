@@ -1,27 +1,27 @@
 const db = require('../config/database');
 const fs = require('fs');
 
-// GET Student List with Flexible Class Filtering
+// GET Student List with Bulletproof Flexible Class Filtering
 exports.getStudents = (req, res) => {
-  const selectedClass = req.query.class_filter || 'ALL';
+  const rawClass = req.query.class_filter ? req.query.class_filter.trim() : 'ALL';
   
   let sql = "SELECT * FROM students";
   let params = [];
 
-  if (selectedClass !== 'ALL') {
-    // Trim and allow partial match so 'JSS 1' matches 'JSS 1', 'JSS1', etc.
-    const cleanClass = selectedClass.trim();
-    sql += " WHERE class LIKE ? OR class_name LIKE ? OR student_class LIKE ?";
+  if (rawClass !== 'ALL' && rawClass !== '') {
+    // Strip spaces for flexible matching (e.g. 'JSS 1' vs 'JSS1')
+    const cleanClass = rawClass.replace(/\s+/g, '');
+    sql += " WHERE REPLACE(LOWER(class), ' ', '') LIKE LOWER(?) OR REPLACE(LOWER(class_name), ' ', '') LIKE LOWER(?) OR REPLACE(LOWER(student_class), ' ', '') LIKE LOWER(?)";
     params = [`%${cleanClass}%`, `%${cleanClass}%`, `%${cleanClass}%`];
   }
   
   sql += " ORDER BY id DESC";
 
   db.all(sql, params, (err, rows) => {
-    if (err) console.error("Error fetching students:", err);
+    if (err) console.error("Error fetching filtered students:", err);
     res.render('students/list', { 
       students: rows || [], 
-      selectedClass: selectedClass,
+      selectedClass: rawClass,
       user: req.session ? req.session.user : null 
     });
   });
