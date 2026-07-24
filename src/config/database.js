@@ -32,7 +32,7 @@ db.serialize(() => {
     status TEXT
   )`);
 
-  // Teachers / Staff Table
+  // Teachers Table
   db.run(`CREATE TABLE IF NOT EXISTS teachers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fullname TEXT,
@@ -41,6 +41,14 @@ db.serialize(() => {
     phone TEXT,
     subject_assigned TEXT,
     role TEXT DEFAULT 'Teacher'
+  )`);
+
+  // Subjects Table
+  db.run(`CREATE TABLE IF NOT EXISTS subjects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject_name TEXT,
+    subject_code TEXT,
+    class_category TEXT
   )`);
 });
 

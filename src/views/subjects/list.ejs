@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="container" style="padding: 25px 20px; max-width: 1050px; margin: auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <h2 style="color: #1a365d; margin: 0;">Manage Subjects Directory</h2>
+      <p style="color: #718096; margin: 5px 0 0 0; font-size: 14px;">Create and organize curriculum subjects for each class level.</p>
+    </div>
+    
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <form action="/subjects" method="GET" style="display: flex; align-items: center; gap: 8px;">
+        <label style="font-weight: bold; color: #1a365d; font-size: 14px;">Class Filter:</label>
+        <select name="class_filter" onchange="this.form.submit();" style="padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-weight: bold;">
+          <option value="ALL" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'ALL') ? 'selected' : '' %>>-- All Classes --</option>
+          <option value="Pre-Nursery" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Pre-Nursery') ? 'selected' : '' %>>Pre-Nursery</option>
+          <option value="Nursery 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Nursery 1') ? 'selected' : '' %>>Nursery 1</option>
+          <option value="Nursery 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Nursery 2') ? 'selected' : '' %>>Nursery 2</option>
+          <option value="Primary 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 1') ? 'selected' : '' %>>Primary 1</option>
+          <option value="Primary 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 2') ? 'selected' : '' %>>Primary 2</option>
+          <option value="Primary 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 3') ? 'selected' : '' %>>Primary 3</option>
+          <option value="Primary 4" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 4') ? 'selected' : '' %>>Primary 4</option>
+          <option value="Primary 5" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 5') ? 'selected' : '' %>>Primary 5</option>
+          <option value="JSS 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 1') ? 'selected' : '' %>>JSS 1</option>
+          <option value="JSS 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 2') ? 'selected' : '' %>>JSS 2</option>
+          <option value="JSS 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 3') ? 'selected' : '' %>>JSS 3</option>
+        </select>
+      </form>
+
+      <a href="/subjects/register" style="padding: 10px 18px; background: #2b6cb0; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">+ Add New Subject</a>
+    </div>
+  </div>
+
+  <% if (typeof subjects !== 'undefined' && subjects.length > 0) { %>
+    <div style="background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+          <tr style="background: #1a365d; color: white; text-align: left;">
+            <th style="padding: 12px;">Subject Name</th>
+            <th style="padding: 12px;">Subject Code</th>
+            <th style="padding: 12px;">Assigned Class Category</th>
+            <th style="padding: 12px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% subjects.forEach(function(subject) { %>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 12px; font-weight: bold; color: #2d3748;"><%= subject.subject_name %></td>
+              <td style="padding: 12px;"><code style="background: #edf2f7; color: #2c5282; padding: 4px 8px; border-radius: 4px; font-weight: bold;"><%= subject.subject_code || 'N/A' %></code></td>
+              <td style="padding: 12px;"><span style="background: #e2e8f0; color: #1a365d; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;"><%= subject.class_category %></span></td>
+              <td style="padding: 12px; text-align: center;">
+                <a href="/subjects/edit/<%= subject.id %>" style="color: #d69e2e; font-weight: bold; text-decoration: none; margin-right: 8px;">Edit</a> |
+                <a href="/subjects/delete/<%= subject.id %>" onclick="return confirm('Delete subject?');" style="color: #e53e3e; font-weight: bold; text-decoration: none; margin-left: 8px;">Delete</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p style="margin-top: 20px; color: #666; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0;">No subjects registered yet for the selected filter.</p>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

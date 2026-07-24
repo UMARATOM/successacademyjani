@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+
+<div class="container" style="padding: 30px 20px; max-width: 650px; margin: auto;">
+  <div style="background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 5px solid #2b6cb0;">
+    <h2 style="color: #1a365d; margin-top: 0; margin-bottom: 5px;">Edit Subject Details</h2>
+    <p style="color: #718096; font-size: 14px; margin-bottom: 25px;">Update subject title, code, or assigned class level.</p>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div style="background: #fed7d7; color: #9b2c2c; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/subjects/edit/<%= subject.id %>" method="POST">
+      
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Subject Name *</label>
+        <input type="text" name="subject_name" value="<%= subject.subject_name || '' %>" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+        <div>
+          <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Subject Code</label>
+          <input type="text" name="subject_code" value="<%= subject.subject_code || '' %>" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;">
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Class Category *</label>
+          <% const currentCategory = subject.class_category || 'ALL'; %>
+          <select name="class_category" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;" required>
+            <option value="ALL" <%= currentCategory === 'ALL' ? 'selected' : '' %>>All Classes (General Subject)</option>
+            <option value="Pre-Nursery" <%= currentCategory === 'Pre-Nursery' ? 'selected' : '' %>>Pre-Nursery</option>
+            <option value="Nursery 1" <%= currentCategory === 'Nursery 1' ? 'selected' : '' %>>Nursery 1</option>
+            <option value="Nursery 2" <%= currentCategory === 'Nursery 2' ? 'selected' : '' %>>Nursery 2</option>
+            <option value="Primary 1" <%= currentCategory === 'Primary 1' ? 'selected' : '' %>>Primary 1</option>
+            <option value="Primary 2" <%= currentCategory === 'Primary 2' ? 'selected' : '' %>>Primary 2</option>
+            <option value="Primary 3" <%= currentCategory === 'Primary 3' ? 'selected' : '' %>>Primary 3</option>
+            <option value="Primary 4" <%= currentCategory === 'Primary 4' ? 'selected' : '' %>>Primary 4</option>
+            <option value="Primary 5" <%= currentCategory === 'Primary 5' ? 'selected' : '' %>>Primary 5</option>
+            <option value="JSS 1" <%= currentCategory === 'JSS 1' ? 'selected' : '' %>>JSS 1</option>
+            <option value="JSS 2" <%= currentCategory === 'JSS 2' ? 'selected' : '' %>>JSS 2</option>
+            <option value="JSS 3" <%= currentCategory === 'JSS 3' ? 'selected' : '' %>>JSS 3</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" style="width: 100%; background: #2b6cb0; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer;">
+        Save Changes
+      </button>
+      
+      <div style="text-align: center; margin-top: 15px;">
+        <a href="/subjects" style="color: #718096; text-decoration: none; font-size: 14px;">Cancel and return to list</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
