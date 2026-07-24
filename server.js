@@ -20,12 +20,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const dashboardController = require('./src/controllers/dashboardController');
-const gradeController = require('./src/controllers/gradeController');
 
 const indexRoutes = require('./src/routes/indexRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
 const teacherRoutes = require('./src/routes/teacherRoutes');
 const subjectRoutes = require('./src/routes/subjectRoutes');
+const gradeRoutes = require('./src/routes/gradeRoutes');
 
 // Auth Middleware
 const requireAuth = (req, res, next) => {
@@ -43,9 +43,9 @@ app.use('/', indexRoutes);
 app.use('/students', requireAuth, studentRoutes);
 app.use('/teachers', requireAuth, requireAdmin, teacherRoutes);
 app.use('/subjects', requireAuth, requireAdmin, subjectRoutes);
+app.use('/grades', requireAuth, gradeRoutes);
 
 app.get('/dashboard', requireAuth, requireAdmin, dashboardController.getDashboard);
-app.get('/grades', requireAuth, gradeController.getGradebook);
 
 app.get('/', (req, res) => {
   if (req.session && req.session.user) {

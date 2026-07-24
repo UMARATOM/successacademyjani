@@ -50,6 +50,23 @@ db.serialize(() => {
     subject_code TEXT,
     class_category TEXT
   )`);
+
+  // Grades / Continuous Assessment Table
+  db.run(`CREATE TABLE IF NOT EXISTS grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER,
+    subject_id INTEGER,
+    term TEXT DEFAULT '1st Term',
+    session_year TEXT DEFAULT '2025/2026',
+    ca1 REAL DEFAULT 0,
+    ca2 REAL DEFAULT 0,
+    exam REAL DEFAULT 0,
+    total REAL DEFAULT 0,
+    grade TEXT,
+    remarks TEXT,
+    FOREIGN KEY(student_id) REFERENCES students(id),
+    FOREIGN KEY(subject_id) REFERENCES subjects(id)
+  )`);
 });
 
 module.exports = db;

@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const gradeController = require('../controllers/gradeController');
 
-router.get('/', gradeController.getEnterGrades);
-router.get('/enter', gradeController.getEnterGrades);
+router.get('/', gradeController.getGradebook);
+router.post('/save', gradeController.postSaveGrades);
 router.get('/report-card/:studentId', gradeController.getReportCard);
-router.post('/enter', gradeController.postEnterGrades);
 
 module.exports = router;
