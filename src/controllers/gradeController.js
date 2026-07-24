@@ -3,8 +3,6 @@ const db = require('../config/database');
 const fixGradesTable = (callback) => {
   db.all("PRAGMA table_info(grades)", [], (err, columns) => {
     const colNames = (columns || []).map(c => c.name);
-    
-    // If table is missing or doesn't have subject_id, recreate cleanly
     if (!colNames.includes('subject_id')) {
       db.run("DROP TABLE IF EXISTS grades", [], () => {
         db.run(`CREATE TABLE grades (
@@ -80,8 +78,8 @@ exports.getGradebook = (req, res) => {
         }
 
         db.all(
-          "SELECT * FROM grades WHERE subject_id = ? AND term = ? AND session_year = ?",
-          [parseInt(selectedSubjectId, 10), selectedTerm, selectedSession],
+          "SELECT * FROM grades WHERE CAST(subject_id AS TEXT) = ? AND term = ? AND session_year = ?",
+          [String(selectedSubjectId), selectedTerm, selectedSession],
           (err, gradeRows) => {
             const gradesMap = {};
             (gradeRows || []).forEach(g => {
@@ -131,8 +129,8 @@ exports.postSaveGrades = (req, res) => {
         const { grade, remark } = calculateGrade(total);
 
         db.get(
-          "SELECT id FROM grades WHERE student_id = ? AND subject_id = ? AND term = ? AND session_year = ?",
-          [studentId, cleanSubjectId, term, session_year],
+          "SELECT id FROM grades WHERE CAST(student_id AS TEXT) = ? AND CAST(subject_id AS TEXT) = ? AND term = ? AND session_year = ?",
+          [String(studentId), String(cleanSubjectId), term, session_year],
           (err, existing) => {
             if (existing) {
               db.run(
@@ -183,14 +181,15 @@ exports.getReportCard = (req, res) => {
         });
         const totalStudentsInClass = classStudents.length || 1;
 
+        // Joined query with flexible string/number casting for subject_id
         const sql = `
           SELECT g.*, s.subject_name, s.subject_code 
           FROM grades g 
-          JOIN subjects s ON g.subject_id = s.id 
-          WHERE g.student_id = ? AND g.term = ? AND g.session_year = ?
+          JOIN subjects s ON CAST(g.subject_id AS TEXT) = CAST(s.id AS TEXT)
+          WHERE CAST(g.student_id AS TEXT) = ? AND g.term = ? AND g.session_year = ?
         `;
 
-        db.all(sql, [studentId, selectedTerm, selectedSession], (err, gradeRecords) => {
+        db.all(sql, [String(studentId), selectedTerm, selectedSession], (err, gradeRecords) => {
           let grandTotal = 0;
           let subjectCount = (gradeRecords || []).length;
 
@@ -199,17 +198,17 @@ exports.getReportCard = (req, res) => {
           });
 
           const overallAverage = subjectCount > 0 ? (grandTotal / subjectCount).toFixed(1) : '0.0';
-          const classStudentIds = classStudents.map(s => parseInt(s.id, 10));
+          const classStudentIds = classStudents.map(s => String(s.id));
 
           db.all(
             "SELECT student_id, SUM(total) as student_grand_total FROM grades WHERE term = ? AND session_year = ? GROUP BY student_id",
             [selectedTerm, selectedSession],
             (err, totals) => {
-              const classTotals = (totals || []).filter(t => classStudentIds.includes(parseInt(t.student_id, 10)));
+              const classTotals = (totals || []).filter(t => classStudentIds.includes(String(t.student_id)));
               classTotals.sort((a, b) => b.student_grand_total - a.student_grand_total);
 
               let rank = 1;
-              const targetIndex = classTotals.findIndex(t => parseInt(t.student_id, 10) === studentId);
+              const targetIndex = classTotals.findIndex(t => String(t.student_id) === String(studentId));
               if (targetIndex !== -1) {
                 rank = targetIndex + 1;
               }
