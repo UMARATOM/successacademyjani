@@ -17,11 +17,9 @@ const upload = multer({ storage: storage });
 
 router.get('/', studentController.getStudents);
 router.get('/register', studentController.getRegister);
-router.post('/register', upload.fields([
-  { name: 'passport', maxCount: 1 },
-  { name: 'birth_cert', maxCount: 1 },
-  { name: 'primary_cert', maxCount: 1 }
-]), studentController.postRegister);
+
+// Accept ANY uploaded image fields dynamically
+router.post('/register', upload.any(), studentController.postRegister);
 
 router.get('/edit/:id', studentController.getEdit);
 router.post('/edit/:id', studentController.postEdit);

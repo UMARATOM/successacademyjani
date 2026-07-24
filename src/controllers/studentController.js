@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-// List Students
 const getStudents = (req, res) => {
   const selectedClass = req.query.class_filter || 'ALL';
 
@@ -24,12 +23,10 @@ const getStudents = (req, res) => {
   });
 };
 
-// Form to Register Student
 const getRegister = (req, res) => {
   res.render('students/register', { error: null, user: req.session ? req.session.user : null });
 };
 
-// Process Registration
 const postRegister = (req, res) => {
   const {
     fullname, full_name, name,
@@ -56,18 +53,21 @@ const postRegister = (req, res) => {
   }
 
   let passport_path = '';
-  if (req.files && req.files.passport && req.files.passport[0]) {
-    passport_path = req.files.passport[0].filename;
-  }
-
   let birth_cert = '';
-  if (req.files && req.files.birth_cert && req.files.birth_cert[0]) {
-    birth_cert = req.files.birth_cert[0].filename;
-  }
-
   let primary_cert = '';
-  if (req.files && req.files.primary_cert && req.files.primary_cert[0]) {
-    primary_cert = req.files.primary_cert[0].filename;
+
+  if (Array.isArray(req.files)) {
+    req.files.forEach(f => {
+      if (f.fieldname === 'passport' || f.fieldname === 'passport_photo' || f.fieldname === 'photo') {
+        passport_path = f.filename;
+      } else if (f.fieldname === 'birth_cert') {
+        birth_cert = f.filename;
+      } else if (f.fieldname === 'primary_cert') {
+        primary_cert = f.filename;
+      } else if (!passport_path) {
+        passport_path = f.filename; // fallback
+      }
+    });
   }
 
   const completeInsertion = (finalRegNo) => {
@@ -115,7 +115,6 @@ const postRegister = (req, res) => {
   }
 };
 
-// Edit Student
 const getEdit = (req, res) => {
   const id = req.params.id;
   db.get("SELECT * FROM students WHERE id = ?", [id], (err, student) => {
@@ -124,7 +123,6 @@ const getEdit = (req, res) => {
   });
 };
 
-// Save Edited Student
 const postEdit = (req, res) => {
   const id = req.params.id;
   const { fullname, student_class, gender, guardian_phone, reg_number } = req.body || {};
@@ -143,7 +141,6 @@ const postEdit = (req, res) => {
   });
 };
 
-// Delete Student
 const getDelete = (req, res) => {
   const id = req.params.id;
   db.run("DELETE FROM students WHERE id = ?", [id], () => {
