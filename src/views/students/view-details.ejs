@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+
+<style>
+  @media print {
+    .navbar, .print-btn, .back-btn { display: none !important; }
+    body { background: white; }
+    .card { border: none !important; box-shadow: none !important; }
+  }
+</style>
+
+<div class="container" style="padding: 30px 20px; max-width: 850px; margin: auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="/students" class="back-btn" style="text-decoration: none; color: #4a5568; font-weight: bold;">&larr; Back to Student Directory</a>
+    <button onclick="window.print();" class="print-btn" style="background: #1a365d; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+      🖨️ Print Student Profile
+    </button>
+  </div>
+
+  <div class="card" style="background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; margin-bottom: 25px;">
+      <div>
+        <h2 style="color: #1a365d; margin: 0; font-size: 24px;"><%= student.fullname || student.full_name || student.name %></h2>
+        <p style="color: #2b6cb0; font-weight: bold; margin: 5px 0 0 0;">Registration No: <%= student.reg_number || student.registration_number || 'N/A' %></p>
+      </div>
+      <div>
+        <% if (student.passport_path) { %>
+          <img src="<%= student.passport_path.startsWith('data:') ? student.passport_path : '/uploads/' + student.passport_path %>" style="width: 90px; height: 100px; object-fit: cover; border-radius: 6px; border: 2px solid #1a365d;" alt="Passport">
+        <% } else { %>
+          <div style="width: 90px; height: 100px; border-radius: 6px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #718096; font-size: 12px; font-weight: bold;">No Passport</div>
+        <% } %>
+      </div>
+    </div>
+
+    <h3 style="color: #1a365d; font-size: 16px; margin-bottom: 15px;">Academic Information</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 14px;">
+      <div><strong>Academic Session:</strong> <%= student.session_year || '2025/2026' %></div>
+      <div><strong>Class Assigned:</strong> <%= student.class || student.class_name || student.student_class || 'JSS 1' %></div>
+      <div><strong>Gender:</strong> <%= student.gender || 'Male' %></div>
+      <div><strong>Current Status:</strong> <span style="color: #276749; font-weight: bold;"><%= student.status || 'Active' %></span></div>
+    </div>
+
+    <h3 style="color: #1a365d; font-size: 16px; margin-bottom: 15px;">Guardian & Contact Details</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 14px;">
+      <div><strong>Parent / Guardian Name:</strong> <%= student.guardian_name || 'Not Provided' %></div>
+      <div><strong>Guardian Phone Number:</strong> <%= student.guardian_phone || 'Not Provided' %></div>
+    </div>
+
+    <h3 style="color: #1a365d; font-size: 16px; margin-bottom: 15px;">Attached Documents & Credentials</h3>
+    <div style="display: flex; gap: 15px;">
+      <% if (student.birth_cert) { %>
+        <a href="<%= student.birth_cert %>" target="_blank" style="background: #e2e8f0; color: #2d3748; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">
+          📄 View Birth Certificate
+        </a>
+      <% } %>
+      <% if (student.primary_cert) { %>
+        <a href="<%= student.primary_cert %>" target="_blank" style="background: #e2e8f0; color: #2d3748; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">
+          🎓 View Primary Testimonial
+        </a>
+      <% } %>
+      <% if (!student.birth_cert && !student.primary_cert) { %>
+        <p style="color: #a0aec0; font-size: 13px; margin: 0;">No document attachments uploaded during registration.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -23,6 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.get('/', studentController.getStudents);
+router.get('/view/:id', studentController.getStudentDetails);
 router.get('/register', studentController.getRegister);
 
 router.post('/register', upload.fields([

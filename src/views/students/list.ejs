@@ -1,12 +1,54 @@
 <%- include('../partials/header') %>
 
+<style>
+  @media print {
+    .navbar, .filter-bar, .action-links, .register-btn, footer { display: none !important; }
+    body { background: white; }
+    .print-header { display: block !important; }
+    .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    table { width: 100% !important; border: 1px solid #000 !important; }
+    th, td { border: 1px solid #000 !important; padding: 8px !important; }
+  }
+  .print-header { display: none; margin-bottom: 20px; text-align: center; }
+</style>
+
 <div class="container" style="padding: 25px 20px; max-width: 1100px; margin: auto;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-    <div>
-      <h2 style="color: #1a365d; margin: 0;">Student Management Directory</h2>
-      <p style="color: #718096; margin: 5px 0 0 0; font-size: 14px;">View registered students, session info, attachments, and progress report cards.</p>
+  
+  <div class="print-header">
+    <h1 style="margin: 0; color: #1a365d;">SUCCESS ACADEMY JANI</h1>
+    <h3 style="margin: 5px 0;">OFFICIAL STUDENT DIRECTORY LIST</h3>
+    <p style="margin: 0;">CLASS CATEGORY: <%= typeof selectedClass !== 'undefined' && selectedClass !== 'ALL' ? selectedClass : 'ALL CLASSES' %></p>
+    <hr style="margin-top: 10px;">
+  </div>
+
+  <div class="filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background: white; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+    
+    <form action="/students" method="GET" style="display: flex; align-items: center; gap: 10px;">
+      <label style="font-weight: bold; color: #1a365d; font-size: 14px;">Filter by Class:</label>
+      <select name="class_filter" onchange="this.form.submit();" style="padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-weight: bold; color: #2d3748;">
+        <option value="ALL" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'ALL') ? 'selected' : '' %>>-- All Classes --</option>
+        <option value="Pre-Nursery" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Pre-Nursery') ? 'selected' : '' %>>Pre-Nursery</option>
+        <option value="Nursery 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Nursery 1') ? 'selected' : '' %>>Nursery 1</option>
+        <option value="Nursery 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Nursery 2') ? 'selected' : '' %>>Nursery 2</option>
+        <option value="Primary 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 1') ? 'selected' : '' %>>Primary 1</option>
+        <option value="Primary 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 2') ? 'selected' : '' %>>Primary 2</option>
+        <option value="Primary 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 3') ? 'selected' : '' %>>Primary 3</option>
+        <option value="Primary 4" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 4') ? 'selected' : '' %>>Primary 4</option>
+        <option value="Primary 5" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'Primary 5') ? 'selected' : '' %>>Primary 5</option>
+        <option value="JSS 1" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 1') ? 'selected' : '' %>>JSS 1</option>
+        <option value="JSS 2" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 2') ? 'selected' : '' %>>JSS 2</option>
+        <option value="JSS 3" <%= (typeof selectedClass !== 'undefined' && selectedClass === 'JSS 3') ? 'selected' : '' %>>JSS 3</option>
+      </select>
+    </form>
+
+    <div style="display: flex; gap: 10px;">
+      <button onclick="window.print();" style="padding: 10px 16px; background: #2b6cb0; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+        🖨️ Print Filtered List
+      </button>
+      <a href="/students/register" class="register-btn" style="padding: 10px 18px; background: #1a73e8; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        + Register New Student
+      </a>
     </div>
-    <a href="/students/register" style="padding: 10px 18px; background: #1a73e8; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">+ Register New Student</a>
   </div>
 
   <% if (typeof students !== 'undefined' && students.length > 0) { %>
@@ -19,8 +61,8 @@
             <th style="padding: 12px;">Full Name</th>
             <th style="padding: 12px;">Class</th>
             <th style="padding: 12px;">Session</th>
-            <th style="padding: 12px; text-align: center;">Documents</th>
-            <th style="padding: 12px; text-align: center;">Actions</th>
+            <th style="padding: 12px; text-align: center;" class="action-links">Full Details</th>
+            <th style="padding: 12px; text-align: center;" class="action-links">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -44,21 +86,14 @@
               <td style="padding: 10px;"><%= student.class || student.class_name || student.student_class || 'Unassigned' %></td>
               <td style="padding: 10px;"><span style="background: #edf2f7; color: #2d3748; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px;"><%= student.session_year || '2025/2026' %></span></td>
               
-              <!-- Documents Admin Viewer -->
-              <td style="padding: 10px; text-align: center;">
-                <% if (student.birth_cert) { %>
-                  <a href="<%= student.birth_cert %>" target="_blank" style="font-size: 11px; background: #e2e8f0; color: #2d3748; padding: 2px 6px; border-radius: 4px; text-decoration: none; margin-right: 4px;">Birth Cert</a>
-                <% } %>
-                <% if (student.primary_cert) { %>
-                  <a href="<%= student.primary_cert %>" target="_blank" style="font-size: 11px; background: #e2e8f0; color: #2d3748; padding: 2px 6px; border-radius: 4px; text-decoration: none;">Primary Cert</a>
-                <% } %>
-                <% if (!student.birth_cert && !student.primary_cert) { %>
-                  <span style="color: #a0aec0; font-size: 12px;">None</span>
-                <% } %>
+              <td style="padding: 10px; text-align: center;" class="action-links">
+                <a href="/students/view/<%= student.id %>" style="background: #edf2f7; color: #2b6cb0; padding: 5px 10px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 12px;">
+                  👁️ View Full Details
+                </a>
               </td>
 
-              <td style="padding: 10px; text-align: center;">
-                <a href="/grades/report-card/<%= student.id %>" style="color: #2b6cb0; font-weight: bold; text-decoration: none; margin-right: 6px;">View Report Card</a> |
+              <td style="padding: 10px; text-align: center;" class="action-links">
+                <a href="/grades/report-card/<%= student.id %>" style="color: #2b6cb0; font-weight: bold; text-decoration: none; margin-right: 6px;">Report Card</a> |
                 <a href="/students/edit/<%= student.id %>" style="color: #d69e2e; font-weight: bold; text-decoration: none; margin-left: 6px; margin-right: 6px;">Edit</a> |
                 <a href="/students/delete/<%= student.id %>" onclick="return confirm('Delete student record?');" style="color: #e53e3e; font-weight: bold; text-decoration: none; margin-left: 6px;">Delete</a>
               </td>
@@ -68,7 +103,7 @@
       </table>
     </div>
   <% } else { %>
-    <p style="margin-top: 20px; color: #666; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0;">No student records found in the database.</p>
+    <p style="margin-top: 20px; color: #666; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0;">No student records found for the selected class filter.</p>
   <% } %>
 </div>
 

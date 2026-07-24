@@ -2,9 +2,33 @@ const db = require('../config/database');
 const fs = require('fs');
 
 exports.getStudents = (req, res) => {
-  db.all("SELECT * FROM students ORDER BY id DESC", [], (err, rows) => {
+  const selectedClass = req.query.class_filter || 'ALL';
+  
+  let sql = "SELECT * FROM students";
+  let params = [];
+
+  if (selectedClass !== 'ALL') {
+    sql += " WHERE class = ? OR class_name = ? OR student_class = ?";
+    params = [selectedClass, selectedClass, selectedClass];
+  }
+  
+  sql += " ORDER BY id DESC";
+
+  db.all(sql, params, (err, rows) => {
     if (err) console.error("Error fetching students:", err);
-    res.render('students/list', { students: rows || [], user: req.session ? req.session.user : null });
+    res.render('students/list', { 
+      students: rows || [], 
+      selectedClass: selectedClass,
+      user: req.session ? req.session.user : null 
+    });
+  });
+};
+
+exports.getStudentDetails = (req, res) => {
+  const studentId = req.params.id;
+  db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
+    if (err || !student) return res.redirect('/students');
+    res.render('students/view-details', { student: student, user: req.session ? req.session.user : null });
   });
 };
 
@@ -22,7 +46,6 @@ exports.postRegister = (req, res) => {
   const guardian_name = body.guardian_name || '';
   const guardian_phone = body.guardian_phone || '';
 
-  // Helper function to read file into Base64 data string
   const getBase64 = (fileArray) => {
     if (fileArray && fileArray[0]) {
       const file = fileArray[0];
