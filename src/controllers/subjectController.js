@@ -1,53 +1,33 @@
 const db = require('../config/database');
 
-const fixSubjectsTable = (callback) => {
-  db.all("PRAGMA table_info(subjects)", [], (err, columns) => {
-    const colNames = (columns || []).map(c => c.name);
-    if (!colNames.includes('class_category')) {
-      db.run("DROP TABLE IF EXISTS subjects", [], () => {
-        db.run(`CREATE TABLE subjects (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          subject_name TEXT,
-          subject_code TEXT,
-          class_category TEXT
-        )`, [], () => callback());
-      });
-    } else {
-      callback();
-    }
-  });
-};
-
 exports.getSubjects = (req, res) => {
   const selectedClass = req.query.class_filter || 'ALL';
 
-  fixSubjectsTable(() => {
-    let sql = "SELECT * FROM subjects";
-    let params = [];
+  let sql = "SELECT * FROM subjects";
+  let params = [];
 
-    if (selectedClass !== 'ALL') {
-      let extraCondition = "";
-      if (selectedClass.startsWith("JSS")) {
-        extraCondition = " OR class_category = 'All JSS Classes'";
-      } else if (selectedClass.startsWith("Primary")) {
-        extraCondition = " OR class_category = 'All Primary Classes'";
-      } else if (selectedClass.startsWith("Nursery")) {
-        extraCondition = " OR class_category = 'All Nursery Classes'";
-      }
-
-      sql += ` WHERE class_category = ? OR class_category = 'ALL'${extraCondition}`;
-      params = [selectedClass];
+  if (selectedClass !== 'ALL') {
+    let extraCondition = "";
+    if (selectedClass.startsWith("JSS")) {
+      extraCondition = " OR class_category = 'All JSS Classes'";
+    } else if (selectedClass.startsWith("Primary")) {
+      extraCondition = " OR class_category = 'All Primary Classes'";
+    } else if (selectedClass.startsWith("Nursery")) {
+      extraCondition = " OR class_category = 'All Nursery Classes'";
     }
 
-    sql += " ORDER BY id DESC";
+    sql += ` WHERE class_category = ? OR class_category = 'ALL'${extraCondition}`;
+    params = [selectedClass];
+  }
 
-    db.all(sql, params, (err, rows) => {
-      if (err) console.error("Error fetching subjects:", err);
-      res.render('subjects/list', { 
-        subjects: rows || [], 
-        selectedClass: selectedClass,
-        user: req.session ? req.session.user : null 
-      });
+  sql += " ORDER BY id DESC";
+
+  db.all(sql, params, (err, rows) => {
+    if (err) console.error("Error fetching subjects:", err);
+    res.render('subjects/list', { 
+      subjects: rows || [], 
+      selectedClass: selectedClass,
+      user: req.session ? req.session.user : null 
     });
   });
 };
@@ -69,22 +49,20 @@ exports.postRegister = (req, res) => {
   const cleanName = subject_name.trim();
   const cleanCode = (subject_code || '').trim().toUpperCase();
 
-  fixSubjectsTable(() => {
-    db.run(
-      "INSERT INTO subjects (subject_name, subject_code, class_category) VALUES (?, ?, ?)",
-      [cleanName, cleanCode || 'SUB', class_category],
-      (err) => {
-        if (err) {
-          console.error("Error creating subject:", err);
-          return res.render('subjects/register', { 
-            error: 'Failed to create subject. Please try again.', 
-            user: req.session ? req.session.user : null 
-          });
-        }
-        res.redirect('/subjects');
+  db.run(
+    "INSERT INTO subjects (subject_name, subject_code, class_category) VALUES (?, ?, ?)",
+    [cleanName, cleanCode || 'SUB', class_category],
+    (err) => {
+      if (err) {
+        console.error("Error creating subject:", err);
+        return res.render('subjects/register', { 
+          error: 'Failed to create subject. Please try again.', 
+          user: req.session ? req.session.user : null 
+        });
       }
-    );
-  });
+      res.redirect('/subjects');
+    }
+  );
 };
 
 exports.getEdit = (req, res) => {

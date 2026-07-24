@@ -1,32 +1,9 @@
 const db = require('../config/database');
 
-const fixTeachersTable = (callback) => {
-  db.all("PRAGMA table_info(teachers)", [], (err, columns) => {
-    const colNames = (columns || []).map(c => c.name);
-    if (!colNames.includes('username')) {
-      db.run("DROP TABLE IF EXISTS teachers", [], () => {
-        db.run(`CREATE TABLE teachers (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          fullname TEXT,
-          username TEXT UNIQUE,
-          password TEXT,
-          phone TEXT,
-          subject_assigned TEXT,
-          role TEXT DEFAULT 'Teacher'
-        )`, [], () => callback());
-      });
-    } else {
-      callback();
-    }
-  });
-};
-
 exports.getTeachers = (req, res) => {
-  fixTeachersTable(() => {
-    db.all("SELECT * FROM teachers ORDER BY id DESC", [], (err, rows) => {
-      if (err) console.error("Error fetching teachers:", err);
-      res.render('teachers/list', { teachers: rows || [], user: req.session ? req.session.user : null });
-    });
+  db.all("SELECT * FROM teachers ORDER BY id DESC", [], (err, rows) => {
+    if (err) console.error("Error fetching teachers:", err);
+    res.render('teachers/list', { teachers: rows || [], user: req.session ? req.session.user : null });
   });
 };
 
@@ -53,26 +30,24 @@ exports.postRegister = (req, res) => {
     });
   }
 
-  fixTeachersTable(() => {
-    db.run(
-      "INSERT INTO teachers (fullname, username, password, phone, subject_assigned, role) VALUES (?, ?, ?, ?, ?, 'Teacher')",
-      [fullname.trim(), cleanUsername, password.trim(), phone || '', subject_assigned || 'General'],
-      (err) => {
-        if (err) {
-          console.error("Error creating staff account:", err.message);
-          let errorMsg = `Unable to create staff account: ${err.message}`;
-          if (err.message && err.message.includes('UNIQUE')) {
-            errorMsg = `The username '${cleanUsername}' is already taken. Please choose another username.`;
-          }
-          return res.render('teachers/register', { 
-            error: errorMsg, 
-            user: req.session ? req.session.user : null 
-          });
+  db.run(
+    "INSERT INTO teachers (fullname, username, password, phone, subject_assigned, role) VALUES (?, ?, ?, ?, ?, 'Teacher')",
+    [fullname.trim(), cleanUsername, password.trim(), phone || '', subject_assigned || 'General'],
+    (err) => {
+      if (err) {
+        console.error("Error creating staff account:", err.message);
+        let errorMsg = `Unable to create staff account: ${err.message}`;
+        if (err.message && err.message.includes('UNIQUE')) {
+          errorMsg = `The username '${cleanUsername}' is already taken. Please choose another username.`;
         }
-        res.redirect('/teachers');
+        return res.render('teachers/register', { 
+          error: errorMsg, 
+          user: req.session ? req.session.user : null 
+        });
       }
-    );
-  });
+      res.redirect('/teachers');
+    }
+  );
 };
 
 exports.getEdit = (req, res) => {
