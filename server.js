@@ -59,6 +59,12 @@ app.get('/', (req, res) => {
   }
 });
 
+// Error handling middleware to print real errors to logs instead of generic Internal Server Error
+app.use((err, req, res, next) => {
+  console.error('[EXPRESS ERROR]:', err.stack || err);
+  res.status(500).send(`Server Error Details: ${err.message || err}`);
+});
+
 app.listen(PORT, () => {
   console.log(`[SERVER] Success Academy System running on port ${PORT}`);
 });
