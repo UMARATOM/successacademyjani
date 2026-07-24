@@ -5,13 +5,11 @@ const path = require('path');
 const fs = require('fs');
 const studentController = require('../controllers/studentController');
 
-// Ensure destination folder exists safely
 const uploadDir = path.join(__dirname, '../../public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Disk storage setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
@@ -28,11 +26,12 @@ router.get('/', studentController.getStudents);
 router.get('/register', studentController.getRegister);
 
 router.post('/register', upload.fields([
-  { name: 'passport', maxCount: 1 }
+  { name: 'passport', maxCount: 1 },
+  { name: 'birth_certificate', maxCount: 1 },
+  { name: 'primary_certificate', maxCount: 1 }
 ]), studentController.postRegister);
 
 router.get('/edit/:id', studentController.getEdit);
-
 router.post('/edit/:id', upload.fields([
   { name: 'passport', maxCount: 1 }
 ]), studentController.postEdit);

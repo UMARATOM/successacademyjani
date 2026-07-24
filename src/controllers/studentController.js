@@ -13,7 +13,106 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = (req, res) => {
-  res.redirect('/students');
+  const body = req.body || {};
+  const full_name = body.full_name ? body.full_name.trim() : '';
+  const class_name = body.class_name || '';
+  const gender = body.gender || 'Male';
+  const dob = body.dob || '';
+  const session_year = body.session_year || '2025/2026';
+  const guardian_name = body.guardian_name || '';
+  const guardian_phone = body.guardian_phone || '';
+
+  // Helper function to read file into Base64 data string
+  const getBase64 = (fileArray) => {
+    if (fileArray && fileArray[0]) {
+      const file = fileArray[0];
+      const buffer = fs.readFileSync(file.path);
+      return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
+    }
+    return '';
+  };
+
+  let passport_path = getBase64(req.files ? req.files['passport'] : null);
+  let birth_cert = getBase64(req.files ? req.files['birth_certificate'] : null);
+  let primary_cert = getBase64(req.files ? req.files['primary_certificate'] : null);
+
+  if (!full_name || !class_name) {
+    return res.render('students/register', { 
+      error: 'Student Full Name and Class are required.', 
+      user: req.session ? req.session.user : null 
+    });
+  }
+
+  db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
+    const existingCols = (columns || []).map(c => c.name);
+    const requiredCols = [
+      { name: 'fullname', type: 'TEXT' },
+      { name: 'full_name', type: 'TEXT' },
+      { name: 'name', type: 'TEXT' },
+      { name: 'class', type: 'TEXT' },
+      { name: 'class_name', type: 'TEXT' },
+      { name: 'gender', type: 'TEXT' },
+      { name: 'dob', type: 'TEXT' },
+      { name: 'session_year', type: 'TEXT' },
+      { name: 'guardian_name', type: 'TEXT' },
+      { name: 'guardian_phone', type: 'TEXT' },
+      { name: 'reg_number', type: 'TEXT' },
+      { name: 'registration_number', type: 'TEXT' },
+      { name: 'passport_path', type: 'TEXT' },
+      { name: 'birth_cert', type: 'TEXT' },
+      { name: 'primary_cert', type: 'TEXT' },
+      { name: 'status', type: 'TEXT' }
+    ];
+
+    const missing = requiredCols.filter(c => !existingCols.includes(c.name));
+    const promises = missing.map(c => new Promise(resolve => db.run(`ALTER TABLE students ADD COLUMN ${c.name} ${c.type}`, () => resolve())));
+
+    Promise.all(promises).then(() => {
+      const currentYear = new Date().getFullYear();
+      db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
+        const count = (row && row.count) ? row.count : 0;
+        const regNo = `SAJ/JS/${currentYear}/${String(count + 1).padStart(3, '0')}`;
+
+        const cols = ['gender', 'dob', 'session_year', 'status'];
+        const params = [gender, dob, session_year, 'Active'];
+
+        if (passport_path) { cols.push('passport_path'); params.push(passport_path); }
+        if (birth_cert) { cols.push('birth_cert'); params.push(birth_cert); }
+        if (primary_cert) { cols.push('primary_cert'); params.push(primary_cert); }
+
+        ['fullname', 'full_name', 'name'].forEach(col => {
+          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
+            cols.push(col); params.push(full_name);
+          }
+        });
+
+        ['class', 'class_name'].forEach(col => {
+          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
+            cols.push(col); params.push(class_name);
+          }
+        });
+
+        ['reg_number', 'registration_number'].forEach(col => {
+          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
+            cols.push(col); params.push(regNo);
+          }
+        });
+
+        if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
+          cols.push('guardian_name'); params.push(guardian_name);
+        }
+        if (existingCols.includes('guardian_phone') || missing.some(m => m.name === 'guardian_phone')) {
+          cols.push('guardian_phone'); params.push(guardian_phone);
+        }
+
+        const placeholders = cols.map(() => '?').join(', ');
+        db.run(`INSERT INTO students (${cols.join(', ')}) VALUES (${placeholders})`, params, (dbErr) => {
+          if (dbErr) console.error("Database insert error:", dbErr);
+          res.redirect('/students');
+        });
+      });
+    });
+  });
 };
 
 exports.getEdit = (req, res) => {
@@ -30,22 +129,22 @@ exports.postEdit = (req, res) => {
   const full_name = body.full_name ? body.full_name.trim() : '';
   const class_name = body.class_name || '';
   const gender = body.gender || 'Male';
+  const session_year = body.session_year || '2025/2026';
+  const status = body.status || 'Active';
 
-  let passportData = null;
-
-  // Convert uploaded image directly into Base64 String
+  let passport_path = null;
   if (req.files && req.files['passport'] && req.files['passport'][0]) {
     const file = req.files['passport'][0];
-    const fileBuffer = fs.readFileSync(file.path);
-    passportData = `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
+    const buffer = fs.readFileSync(file.path);
+    passport_path = `data:${file.mimetype};base64,${buffer.toString('base64')}`;
   }
 
-  let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?`;
-  let params = [full_name, full_name, full_name, class_name, class_name, gender];
+  let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?, session_year = ?, status = ?`;
+  let params = [full_name, full_name, full_name, class_name, class_name, gender, session_year, status];
 
-  if (passportData) {
+  if (passport_path) {
     sql += `, passport_path = ?`;
-    params.push(passportData);
+    params.push(passport_path);
   }
 
   sql += ` WHERE id = ?`;
