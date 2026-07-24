@@ -5,7 +5,6 @@ const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Body Parsers & Session Configuration
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -14,37 +13,48 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Set View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
-// Serve Public Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// Controller Imports
 const dashboardController = require('./src/controllers/dashboardController');
 const teacherController = require('./src/controllers/teacherController');
 const subjectController = require('./src/controllers/subjectController');
 const gradeController = require('./src/controllers/gradeController');
 
-// Route Imports
 const indexRoutes = require('./src/routes/indexRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
+const teacherRoutes = require('./src/routes/teacherRoutes');
+
+// Auth Middleware
+const requireAuth = (req, res, next) => {
+  if (req.session && req.session.user) return next();
+  res.redirect('/login');
+};
+
+// Admin Only Middleware
+const requireAdmin = (req, res, next) => {
+  if (req.session && req.session.user && req.session.user.role === 'Administrator') return next();
+  res.redirect('/students');
+};
 
 app.use('/', indexRoutes);
-app.use('/students', studentRoutes);
+app.use('/students', requireAuth, studentRoutes);
+app.use('/teachers', requireAuth, requireAdmin, teacherRoutes);
 
-// Navigation Routes
-app.get('/dashboard', dashboardController.getDashboard);
-app.get('/teachers', teacherController.getTeachers);
-app.get('/subjects', subjectController.getSubjects);
-app.get('/grades', gradeController.getGradebook);
+app.get('/dashboard', requireAuth, requireAdmin, dashboardController.getDashboard);
+app.get('/subjects', requireAuth, requireAdmin, subjectController.getSubjects);
+app.get('/grades', requireAuth, gradeController.getGradebook);
 
-// Root Redirect
 app.get('/', (req, res) => {
   if (req.session && req.session.user) {
-    res.redirect('/dashboard');
+    if (req.session.user.role === 'Administrator') {
+      res.redirect('/dashboard');
+    } else {
+      res.redirect('/students');
+    }
   } else {
     res.redirect('/login');
   }

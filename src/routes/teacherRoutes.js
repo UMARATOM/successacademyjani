@@ -5,4 +5,6 @@ const teacherController = require('../controllers/teacherController');
 router.get('/', teacherController.getTeachers);
 router.get('/register', teacherController.getRegister);
 router.post('/register', teacherController.postRegister);
+router.get('/delete/:id', teacherController.getDelete);
+
 module.exports = router;

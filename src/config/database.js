@@ -3,32 +3,45 @@ const path = require('path');
 
 const dbPath = path.join(__dirname, '../../database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Error connecting to SQLite database:', err);
-  else console.log('Connected to SQLite database successfully.');
+  if (err) {
+    console.error('Database connection error:', err);
+  } else {
+    console.log('[DATABASE] Connected to SQLite database');
+  }
 });
 
 db.serialize(() => {
-  // Ensure base students table exists
+  // Students Table
   db.run(`CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullname TEXT,
+    full_name TEXT,
+    name TEXT,
+    class TEXT,
     class_name TEXT,
     gender TEXT,
     dob TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    session_year TEXT,
+    guardian_name TEXT,
+    guardian_phone TEXT,
+    reg_number TEXT,
+    registration_number TEXT,
+    passport_path TEXT,
+    birth_cert TEXT,
+    primary_cert TEXT,
+    status TEXT
   )`);
 
-  // Explicitly add all missing name and detail columns
-  const cols = [
-    "name", "first_name", "last_name", 
-    "registration_number", "guardian_name", 
-    "guardian_phone", "passport_path"
-  ];
-
-  cols.forEach(col => {
-    db.run(`ALTER TABLE students ADD COLUMN ${col} TEXT`, () => {
-      // Catch and ignore duplicate column errors quietly
-    });
-  });
+  // Teachers / Staff Table
+  db.run(`CREATE TABLE IF NOT EXISTS teachers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullname TEXT,
+    username TEXT UNIQUE,
+    password TEXT,
+    phone TEXT,
+    subject_assigned TEXT,
+    role TEXT DEFAULT 'Teacher'
+  )`);
 });
 
 module.exports = db;

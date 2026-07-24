@@ -6,19 +6,32 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f9; }
     .navbar { background: #1a365d; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
-    .navbar a { color: white; text-decoration: none; margin-left: 15px; font-weight: bold; }
+    .navbar a { color: white; text-decoration: none; margin-left: 15px; font-weight: bold; font-size: 14px; }
     .navbar a:hover { color: #d69e2e; }
+    .role-badge { background: #d69e2e; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
   </style>
 </head>
 <body>
   <div class="navbar">
-    <div style="font-size: 18px; font-weight: bold;">Success Academy Jani</div>
+    <div style="font-size: 18px; font-weight: bold;">
+      Success Academy Jani
+      <% if (typeof user !== 'undefined' && user && user.role) { %>
+        <span class="role-badge"><%= user.role %></span>
+      <% } %>
+    </div>
     <div>
-      <a href="/dashboard">Dashboard</a>
+      <% if (typeof user !== 'undefined' && user && user.role === 'Administrator') { %>
+        <a href="/dashboard">Dashboard</a>
+      <% } %>
+      
       <a href="/students">Manage Students</a>
-      <a href="/teachers">Manage Staff</a>
-      <a href="/subjects">Manage Subjects</a>
+      
+      <% if (typeof user !== 'undefined' && user && user.role === 'Administrator') { %>
+        <a href="/teachers">Manage Staff</a>
+        <a href="/subjects">Manage Subjects</a>
+      <% } %>
+      
       <a href="/grades">Gradebook</a>
-      <a href="/logout" style="color: #feb2b2;">Logout</a>
+      <a href="/logout" style="color: #feb2b2;">Logout (<%= typeof user !== 'undefined' && user ? (user.fullname || user.username) : '' %>)</a>
     </div>
   </div>
