@@ -1,6 +1,7 @@
 const db = require('../config/database');
 const fs = require('fs');
 
+// GET Student List with Flexible Class Filtering
 exports.getStudents = (req, res) => {
   const selectedClass = req.query.class_filter || 'ALL';
   
@@ -8,8 +9,10 @@ exports.getStudents = (req, res) => {
   let params = [];
 
   if (selectedClass !== 'ALL') {
-    sql += " WHERE class = ? OR class_name = ? OR student_class = ?";
-    params = [selectedClass, selectedClass, selectedClass];
+    // Trim and allow partial match so 'JSS 1' matches 'JSS 1', 'JSS1', etc.
+    const cleanClass = selectedClass.trim();
+    sql += " WHERE class LIKE ? OR class_name LIKE ? OR student_class LIKE ?";
+    params = [`%${cleanClass}%`, `%${cleanClass}%`, `%${cleanClass}%`];
   }
   
   sql += " ORDER BY id DESC";
