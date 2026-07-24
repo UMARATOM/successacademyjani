@@ -1,9 +1,11 @@
 const db = require('../config/database');
 
 exports.getTeachers = (req, res) => {
-  db.all("SELECT * FROM teachers ORDER BY id DESC", [], (err, rows) => {
-    if (err) console.error("Error fetching teachers:", err);
-    res.render('teachers/list', { teachers: rows || [], user: req.session ? req.session.user : null });
+  db.all("CREATE TABLE IF NOT EXISTS teachers (id INTEGER PRIMARY KEY AUTOINCREMENT, fullname TEXT, username TEXT UNIQUE, password TEXT, phone TEXT, subject_assigned TEXT, role TEXT DEFAULT 'Teacher')", [], () => {
+    db.all("SELECT * FROM teachers ORDER BY id DESC", [], (err, rows) => {
+      if (err) console.error("Error fetching teachers:", err);
+      res.render('teachers/list', { teachers: rows || [], user: req.session ? req.session.user : null });
+    });
   });
 };
 
@@ -16,27 +18,37 @@ exports.postRegister = (req, res) => {
 
   if (!fullname || !username || !password) {
     return res.render('teachers/register', { 
-      error: 'Full Name, Username, and Password are required.', 
+      error: 'Staff Full Name, Username, and Password are required.', 
       user: req.session ? req.session.user : null 
     });
   }
 
   const cleanUsername = username.trim().toLowerCase();
 
-  db.run(
-    "INSERT INTO teachers (fullname, username, password, phone, subject_assigned, role) VALUES (?, ?, ?, ?, ?, 'Teacher')",
-    [fullname.trim(), cleanUsername, password.trim(), phone || '', subject_assigned || 'General'],
-    (err) => {
-      if (err) {
-        console.error("Error creating staff account:", err);
-        return res.render('teachers/register', { 
-          error: 'Username already exists. Please choose a different username.', 
-          user: req.session ? req.session.user : null 
-        });
+  // Block reserving 'admin' for staff
+  if (cleanUsername === 'admin') {
+    return res.render('teachers/register', { 
+      error: "The username 'admin' is reserved for the Administrator. Please use a teacher username like 'kabir' or 'teacher1'.", 
+      user: req.session ? req.session.user : null 
+    });
+  }
+
+  db.run("CREATE TABLE IF NOT EXISTS teachers (id INTEGER PRIMARY KEY AUTOINCREMENT, fullname TEXT, username TEXT UNIQUE, password TEXT, phone TEXT, subject_assigned TEXT, role TEXT DEFAULT 'Teacher')", [], () => {
+    db.run(
+      "INSERT INTO teachers (fullname, username, password, phone, subject_assigned, role) VALUES (?, ?, ?, ?, ?, 'Teacher')",
+      [fullname.trim(), cleanUsername, password.trim(), phone || '', subject_assigned || 'General'],
+      (err) => {
+        if (err) {
+          console.error("Error creating staff account:", err);
+          return res.render('teachers/register', { 
+            error: `Username '${cleanUsername}' already exists. Please choose a different username.`, 
+            user: req.session ? req.session.user : null 
+          });
+        }
+        res.redirect('/teachers');
       }
-      res.redirect('/teachers');
-    }
-  );
+    );
+  });
 };
 
 exports.getDelete = (req, res) => {
