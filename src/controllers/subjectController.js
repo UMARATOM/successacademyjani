@@ -1,18 +1,27 @@
 const db = require('../config/database');
 
-const ensureSubjectsTable = (callback) => {
-  db.run(`CREATE TABLE IF NOT EXISTS subjects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subject_name TEXT,
-    subject_code TEXT,
-    class_category TEXT
-  )`, [], () => callback());
+const fixSubjectsTable = (callback) => {
+  db.all("PRAGMA table_info(subjects)", [], (err, columns) => {
+    const colNames = (columns || []).map(c => c.name);
+    if (!colNames.includes('class_category')) {
+      db.run("DROP TABLE IF EXISTS subjects", [], () => {
+        db.run(`CREATE TABLE subjects (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          subject_name TEXT,
+          subject_code TEXT,
+          class_category TEXT
+        )`, [], () => callback());
+      });
+    } else {
+      callback();
+    }
+  });
 };
 
 exports.getSubjects = (req, res) => {
   const selectedClass = req.query.class_filter || 'ALL';
 
-  ensureSubjectsTable(() => {
+  fixSubjectsTable(() => {
     let sql = "SELECT * FROM subjects";
     let params = [];
 
@@ -51,7 +60,7 @@ exports.postRegister = (req, res) => {
   const cleanName = subject_name.trim();
   const cleanCode = (subject_code || '').trim().toUpperCase();
 
-  ensureSubjectsTable(() => {
+  fixSubjectsTable(() => {
     db.run(
       "INSERT INTO subjects (subject_name, subject_code, class_category) VALUES (?, ?, ?)",
       [cleanName, cleanCode || 'SUB', class_category],
