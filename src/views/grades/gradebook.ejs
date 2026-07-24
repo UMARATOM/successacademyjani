@@ -27,7 +27,7 @@
         <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 5px; font-size: 13px;">Subject:</label>
         <select name="subject_id" onchange="this.form.submit();" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-weight: bold;">
           <option value="">-- Select Subject --</option>
-          <% subjects.forEach(function(sub) { %>
+          <% (subjects || []).forEach(function(sub) { %>
             <option value="<%= sub.id %>" <%= String(selectedSubjectId) === String(sub.id) ? 'selected' : '' %>><%= sub.subject_name %> (<%= sub.subject_code %>)</option>
           <% }); %>
         </select>
@@ -53,7 +53,7 @@
     </form>
   </div>
 
-  <% if (selectedSubjectId && students.length > 0) { %>
+  <% if (selectedSubjectId && students && students.length > 0) { %>
     <form action="/grades/save" method="POST">
       <input type="hidden" name="class_filter" value="<%= selectedClass %>">
       <input type="hidden" name="subject_id" value="<%= selectedSubjectId %>">
@@ -75,7 +75,7 @@
           </thead>
           <tbody>
             <% students.forEach(function(student) { %>
-              <% const g = gradesMap[student.id] || {}; %>
+              <% const g = (gradesMap && gradesMap[student.id]) ? gradesMap[student.id] : {}; %>
               <tr style="border-bottom: 1px solid #e2e8f0;">
                 <td style="padding: 12px; font-weight: bold; color: #2b6cb0;">
                   <%= student.reg_number || student.registration_number || 'N/A' %>
@@ -110,9 +110,13 @@
         💾 Save All Class Scores
       </button>
     </form>
-  <% else if (!selectedSubjectId) { %>
+  <% } %>
+
+  <% if (!selectedSubjectId) { %>
     <p style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; color: #4a5568;">Please select a subject from the dropdown above to enter or view continuous assessment scores.</p>
-  <% else { %>
+  <% } %>
+
+  <% if (selectedSubjectId && students && students.length === 0) { %>
     <p style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; color: #4a5568;">No students registered for <%= selectedClass %> yet.</p>
   <% } %>
 </div>
