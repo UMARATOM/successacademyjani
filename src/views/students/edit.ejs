@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
         <div>
           <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Class Category *</label>
           <% const currentClass = student.class || student.class_name || student.student_class || 'JSS 1'; %>
@@ -55,6 +55,11 @@
             <option value="Male" <%= student.gender === 'Male' ? 'selected' : '' %>>Male</option>
             <option value="Female" <%= student.gender === 'Female' ? 'selected' : '' %>>Female</option>
           </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Date of Birth</label>
+          <input type="date" name="dob" value="<%= student.dob || '' %>" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;">
         </div>
       </div>
 
