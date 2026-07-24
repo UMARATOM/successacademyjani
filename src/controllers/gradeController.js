@@ -69,8 +69,8 @@ exports.getGradebook = (req, res) => {
         }
 
         db.all(
-          "SELECT * FROM grades WHERE CAST(subject_id AS TEXT) = ? AND term = ? AND session_year = ?",
-          [String(selectedSubjectId), selectedTerm, selectedSession],
+          "SELECT * FROM grades WHERE subject_id = ? AND term = ? AND session_year = ?",
+          [parseInt(selectedSubjectId, 10), selectedTerm, selectedSession],
           (err, gradeRows) => {
             const gradesMap = {};
             (gradeRows || []).forEach(g => {
@@ -103,20 +103,23 @@ exports.postSaveGrades = (req, res) => {
     studentIds = [studentIds];
   }
 
-  if (!subject_id || studentIds.length === 0) return res.redirect('/grades');
+  const cleanSubjectId = parseInt(subject_id, 10);
+
+  if (!cleanSubjectId || studentIds.length === 0) return res.redirect('/grades');
 
   fixGradesTable(() => {
-    const promises = studentIds.map(studentId => {
+    const promises = studentIds.map(sId => {
       return new Promise((resolve) => {
-        const score1 = Math.min(20, Math.max(0, parseFloat(body[`ca1_${studentId}`]) || 0));
-        const score2 = Math.min(20, Math.max(0, parseFloat(body[`ca2_${studentId}`]) || 0));
-        const scoreExam = Math.min(60, Math.max(0, parseFloat(body[`exam_${studentId}`]) || 0));
+        const studentId = parseInt(sId, 10);
+        const score1 = Math.min(20, Math.max(0, parseFloat(body[`ca1_${sId}`]) || 0));
+        const score2 = Math.min(20, Math.max(0, parseFloat(body[`ca2_${sId}`]) || 0));
+        const scoreExam = Math.min(60, Math.max(0, parseFloat(body[`exam_${sId}`]) || 0));
         const total = score1 + score2 + scoreExam;
         const { grade, remark } = calculateGrade(total);
 
         db.get(
-          "SELECT id FROM grades WHERE CAST(student_id AS TEXT) = ? AND CAST(subject_id AS TEXT) = ? AND term = ? AND session_year = ?",
-          [String(studentId), String(subject_id), term, session_year],
+          "SELECT id FROM grades WHERE student_id = ? AND subject_id = ? AND term = ? AND session_year = ?",
+          [studentId, cleanSubjectId, term, session_year],
           (err, existing) => {
             if (existing) {
               db.run(
@@ -127,7 +130,7 @@ exports.postSaveGrades = (req, res) => {
             } else {
               db.run(
                 "INSERT INTO grades (student_id, subject_id, term, session_year, ca1, ca2, exam, total, grade, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [studentId, subject_id, term, session_year, score1, score2, scoreExam, total, grade, remark],
+                [studentId, cleanSubjectId, term, session_year, score1, score2, scoreExam, total, grade, remark],
                 () => resolve()
               );
             }
@@ -137,13 +140,13 @@ exports.postSaveGrades = (req, res) => {
     });
 
     Promise.all(promises).then(() => {
-      res.redirect(`/grades?class_filter=${encodeURIComponent(class_filter)}&subject_id=${subject_id}&term=${encodeURIComponent(term)}&session_year=${encodeURIComponent(session_year)}`);
+      res.redirect(`/grades?class_filter=${encodeURIComponent(class_filter)}&subject_id=${cleanSubjectId}&term=${encodeURIComponent(term)}&session_year=${encodeURIComponent(session_year)}`);
     });
   });
 };
 
 exports.getReportCard = (req, res) => {
-  const studentId = req.params.studentId;
+  const studentId = parseInt(req.params.studentId, 10);
   const selectedTerm = req.query.term || '1st Term';
   const selectedSession = req.query.session_year || '2025/2026';
 
@@ -153,7 +156,6 @@ exports.getReportCard = (req, res) => {
     const targetClass = (student.class || student.class_name || student.student_class || 'JSS 1').toString();
     const cleanClass = targetClass.toLowerCase().replace(/\s+/g, '');
 
-    // 1. Fetch total students in this class
     db.all("SELECT * FROM students", [], (err, allStudents) => {
       const classStudents = (allStudents || []).filter(s => {
         const sClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
@@ -161,15 +163,14 @@ exports.getReportCard = (req, res) => {
       });
       const totalStudentsInClass = classStudents.length || 1;
 
-      // 2. Fetch grade records for target student
       const sql = `
         SELECT g.*, s.subject_name, s.subject_code 
         FROM grades g 
         JOIN subjects s ON g.subject_id = s.id 
-        WHERE CAST(g.student_id AS TEXT) = ? AND g.term = ? AND g.session_year = ?
+        WHERE g.student_id = ? AND g.term = ? AND g.session_year = ?
       `;
 
-      db.all(sql, [String(studentId), selectedTerm, selectedSession], (err, gradeRecords) => {
+      db.all(sql, [studentId, selectedTerm, selectedSession], (err, gradeRecords) => {
         let grandTotal = 0;
         let subjectCount = (gradeRecords || []).length;
 
@@ -178,19 +179,17 @@ exports.getReportCard = (req, res) => {
         });
 
         const overallAverage = subjectCount > 0 ? (grandTotal / subjectCount).toFixed(1) : '0.0';
+        const classStudentIds = classStudents.map(s => parseInt(s.id, 10));
 
-        // 3. Calculate position by comparing total scores across all students in class
-        const classStudentIds = classStudents.map(s => String(s.id));
-        
         db.all(
           "SELECT student_id, SUM(total) as student_grand_total FROM grades WHERE term = ? AND session_year = ? GROUP BY student_id",
           [selectedTerm, selectedSession],
           (err, totals) => {
-            const classTotals = (totals || []).filter(t => classStudentIds.includes(String(t.student_id)));
+            const classTotals = (totals || []).filter(t => classStudentIds.includes(parseInt(t.student_id, 10)));
             classTotals.sort((a, b) => b.student_grand_total - a.student_grand_total);
 
             let rank = 1;
-            const targetIndex = classTotals.findIndex(t => String(t.student_id) === String(studentId));
+            const targetIndex = classTotals.findIndex(t => parseInt(t.student_id, 10) === studentId);
             if (targetIndex !== -1) {
               rank = targetIndex + 1;
             }
