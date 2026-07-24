@@ -7,13 +7,3 @@ exports.getSubjects = (req, res) => {
     });
   });
 };
-
-exports.postSubjects = (req, res) => {
-  const { subject_name, class_category } = req.body || {};
-  if (!subject_name) {
-    return res.redirect('/subjects');
-  }
-  db.run("INSERT INTO subjects (subject_name, class_category) VALUES (?, ?)", [subject_name, class_category || 'General'], () => {
-    res.redirect('/subjects');
-  });
-};

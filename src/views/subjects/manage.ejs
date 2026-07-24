@@ -1,68 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Success Academy - Subjects</title>
-<link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<div class="app-container">
-<header class="header-bar">
-<h2>Success Academy</h2>
-<div class="user-info">Logged in: <strong><%= user.username %></strong> (<%= user.role %>) | <a href="/logout">Logout</a></div>
-</header>
-<nav class="navigation-tabs">
-<a href="/dashboard">Dashboard</a>
-<a href="/students">Manage Students</a>
-<a href="/teachers">Manage Staff</a>
-<a href="/subjects" class="active">Manage Subjects</a>
-<a href="/grades">Gradebook</a>
-</nav>
-<main class="content-body" style="display: flex; gap: 30px;">
-<div style="flex: 1;">
-<h3>School Curriculum</h3>
-<table class="data-table">
-<thead>
-<tr>
-<th>Subject Name</th>
-<th>Code</th>
-</tr>
-</thead>
-<tbody>
-<% if (subjects.length === 0) { %>
-<tr><td colspan="2" style="text-align:center;">No subjects registered.</td></tr>
-<% } else { %>
-<% subjects.forEach(s => { %>
-<tr>
-<td><strong><%= s.subject_name %></strong></td>
-<td><code><%= s.subject_code %></code></td>
-</tr>
-<% }) %>
-<% } %>
-</tbody>
-</table>
+<%- include('../partials/header') %>
+
+<div class="container" style="padding: 20px;">
+  <h2>Manage Subjects</h2>
+  <p style="margin-top: 10px;">Subject category management loaded successfully.</p>
 </div>
-<div style="width: 350px;">
-<div class="form-card" style="margin: 0; width: 100%;">
-<h3>Add New Subject</h3>
-<% if (error) { %>
-<div class="error-msg"><%= error %></div>
-<% } %>
-<form action="/subjects/add" method="POST">
-<div class="form-group">
-<label for="subject_name">Subject Name</label>
-<input type="text" id="subject_name" name="subject_name" placeholder="e.g., Physics" required>
-</div>
-<div class="form-group">
-<label for="subject_code">Subject Code</label>
-<input type="text" id="subject_code" name="subject_code" placeholder="e.g., PHY" required>
-</div>
-<button type="submit" class="btn-primary" style="width: 100%;">Add Subject</button>
-</form>
-</div>
-</div>
-</main>
-</div>
-</body>
-</html>
+
+<%- include('../partials/footer') %>

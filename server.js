@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -23,17 +22,29 @@ app.set('views', path.join(__dirname, 'src/views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// Core Routes
+// Controller Imports
+const dashboardController = require('./src/controllers/dashboardController');
+const teacherController = require('./src/controllers/teacherController');
+const subjectController = require('./src/controllers/subjectController');
+const gradeController = require('./src/controllers/gradeController');
+
+// Route Imports
 const indexRoutes = require('./src/routes/indexRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
 
 app.use('/', indexRoutes);
 app.use('/students', studentRoutes);
 
-// Root Redirect to Login or Directory
+// Navigation Routes
+app.get('/dashboard', dashboardController.getDashboard);
+app.get('/teachers', teacherController.getTeachers);
+app.get('/subjects', subjectController.getSubjects);
+app.get('/grades', gradeController.getGradebook);
+
+// Root Redirect
 app.get('/', (req, res) => {
   if (req.session && req.session.user) {
-    res.redirect('/students');
+    res.redirect('/dashboard');
   } else {
     res.redirect('/login');
   }
