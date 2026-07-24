@@ -29,17 +29,24 @@
           <% const currentCategory = subject.class_category || 'ALL'; %>
           <select name="class_category" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;" required>
             <option value="ALL" <%= currentCategory === 'ALL' ? 'selected' : '' %>>All Classes (General Subject)</option>
-            <option value="Pre-Nursery" <%= currentCategory === 'Pre-Nursery' ? 'selected' : '' %>>Pre-Nursery</option>
-            <option value="Nursery 1" <%= currentCategory === 'Nursery 1' ? 'selected' : '' %>>Nursery 1</option>
-            <option value="Nursery 2" <%= currentCategory === 'Nursery 2' ? 'selected' : '' %>>Nursery 2</option>
-            <option value="Primary 1" <%= currentCategory === 'Primary 1' ? 'selected' : '' %>>Primary 1</option>
-            <option value="Primary 2" <%= currentCategory === 'Primary 2' ? 'selected' : '' %>>Primary 2</option>
-            <option value="Primary 3" <%= currentCategory === 'Primary 3' ? 'selected' : '' %>>Primary 3</option>
-            <option value="Primary 4" <%= currentCategory === 'Primary 4' ? 'selected' : '' %>>Primary 4</option>
-            <option value="Primary 5" <%= currentCategory === 'Primary 5' ? 'selected' : '' %>>Primary 5</option>
-            <option value="JSS 1" <%= currentCategory === 'JSS 1' ? 'selected' : '' %>>JSS 1</option>
-            <option value="JSS 2" <%= currentCategory === 'JSS 2' ? 'selected' : '' %>>JSS 2</option>
-            <option value="JSS 3" <%= currentCategory === 'JSS 3' ? 'selected' : '' %>>JSS 3</option>
+            <optgroup label="Section Groups">
+              <option value="All JSS Classes" <%= currentCategory === 'All JSS Classes' ? 'selected' : '' %>>All JSS Classes (JSS 1 - JSS 3)</option>
+              <option value="All Primary Classes" <%= currentCategory === 'All Primary Classes' ? 'selected' : '' %>>All Primary Classes (Primary 1 - 5)</option>
+              <option value="All Nursery Classes" <%= currentCategory === 'All Nursery Classes' ? 'selected' : '' %>>All Nursery Classes (Nursery 1 - 2)</option>
+            </optgroup>
+            <optgroup label="Specific Individual Classes">
+              <option value="Pre-Nursery" <%= currentCategory === 'Pre-Nursery' ? 'selected' : '' %>>Pre-Nursery</option>
+              <option value="Nursery 1" <%= currentCategory === 'Nursery 1' ? 'selected' : '' %>>Nursery 1</option>
+              <option value="Nursery 2" <%= currentCategory === 'Nursery 2' ? 'selected' : '' %>>Nursery 2</option>
+              <option value="Primary 1" <%= currentCategory === 'Primary 1' ? 'selected' : '' %>>Primary 1</option>
+              <option value="Primary 2" <%= currentCategory === 'Primary 2' ? 'selected' : '' %>>Primary 2</option>
+              <option value="Primary 3" <%= currentCategory === 'Primary 3' ? 'selected' : '' %>>Primary 3</option>
+              <option value="Primary 4" <%= currentCategory === 'Primary 4' ? 'selected' : '' %>>Primary 4</option>
+              <option value="Primary 5" <%= currentCategory === 'Primary 5' ? 'selected' : '' %>>Primary 5</option>
+              <option value="JSS 1" <%= currentCategory === 'JSS 1' ? 'selected' : '' %>>JSS 1</option>
+              <option value="JSS 2" <%= currentCategory === 'JSS 2' ? 'selected' : '' %>>JSS 2</option>
+              <option value="JSS 3" <%= currentCategory === 'JSS 3' ? 'selected' : '' %>>JSS 3</option>
+            </optgroup>
           </select>
         </div>
       </div>

@@ -26,7 +26,16 @@ exports.getSubjects = (req, res) => {
     let params = [];
 
     if (selectedClass !== 'ALL') {
-      sql += " WHERE class_category = ? OR class_category = 'ALL'";
+      let extraCondition = "";
+      if (selectedClass.startsWith("JSS")) {
+        extraCondition = " OR class_category = 'All JSS Classes'";
+      } else if (selectedClass.startsWith("Primary")) {
+        extraCondition = " OR class_category = 'All Primary Classes'";
+      } else if (selectedClass.startsWith("Nursery")) {
+        extraCondition = " OR class_category = 'All Nursery Classes'";
+      }
+
+      sql += ` WHERE class_category = ? OR class_category = 'ALL'${extraCondition}`;
       params = [selectedClass];
     }
 

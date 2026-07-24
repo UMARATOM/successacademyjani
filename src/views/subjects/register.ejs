@@ -3,7 +3,7 @@
 <div class="container" style="padding: 30px 20px; max-width: 650px; margin: auto;">
   <div style="background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 5px solid #2b6cb0;">
     <h2 style="color: #1a365d; margin-top: 0; margin-bottom: 5px;">Add New Subject</h2>
-    <p style="color: #718096; font-size: 14px; margin-bottom: 25px;">Define a new subject name, code, and assign it to a class category.</p>
+    <p style="color: #718096; font-size: 14px; margin-bottom: 25px;">Define a new subject name, code, and assign it to a specific class or section.</p>
 
     <% if (typeof error !== 'undefined' && error) { %>
       <div style="background: #fed7d7; color: #9b2c2c; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
@@ -28,17 +28,24 @@
           <label style="display: block; font-weight: bold; color: #2d3748; margin-bottom: 6px;">Class Category *</label>
           <select name="class_category" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;" required>
             <option value="ALL">All Classes (General Subject)</option>
-            <option value="Pre-Nursery">Pre-Nursery</option>
-            <option value="Nursery 1">Nursery 1</option>
-            <option value="Nursery 2">Nursery 2</option>
-            <option value="Primary 1">Primary 1</option>
-            <option value="Primary 2">Primary 2</option>
-            <option value="Primary 3">Primary 3</option>
-            <option value="Primary 4">Primary 4</option>
-            <option value="Primary 5">Primary 5</option>
-            <option value="JSS 1">JSS 1</option>
-            <option value="JSS 2">JSS 2</option>
-            <option value="JSS 3">JSS 3</option>
+            <optgroup label="Section Groups">
+              <option value="All JSS Classes">All JSS Classes (JSS 1 - JSS 3)</option>
+              <option value="All Primary Classes">All Primary Classes (Primary 1 - 5)</option>
+              <option value="All Nursery Classes">All Nursery Classes (Nursery 1 - 2)</option>
+            </optgroup>
+            <optgroup label="Specific Individual Classes">
+              <option value="Pre-Nursery">Pre-Nursery</option>
+              <option value="Nursery 1">Nursery 1</option>
+              <option value="Nursery 2">Nursery 2</option>
+              <option value="Primary 1">Primary 1</option>
+              <option value="Primary 2">Primary 2</option>
+              <option value="Primary 3">Primary 3</option>
+              <option value="Primary 4">Primary 4</option>
+              <option value="Primary 5">Primary 5</option>
+              <option value="JSS 1">JSS 1</option>
+              <option value="JSS 2">JSS 2</option>
+              <option value="JSS 3">JSS 3</option>
+            </optgroup>
           </select>
         </div>
       </div>
