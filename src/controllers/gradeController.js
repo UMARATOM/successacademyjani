@@ -97,18 +97,20 @@ exports.getGradebook = (req, res) => {
 exports.postSaveGrades = (req, res) => {
   const body = req.body || {};
   const { class_filter, subject_id, term, session_year } = body;
-  let studentIds = body['student_ids[]'] || body.student_ids || [];
 
-  if (!Array.isArray(studentIds)) {
-    studentIds = [studentIds];
+  let rawStudentIds = body.student_ids || [];
+  if (!Array.isArray(rawStudentIds)) {
+    rawStudentIds = [rawStudentIds];
   }
 
   const cleanSubjectId = parseInt(subject_id, 10);
 
-  if (!cleanSubjectId || studentIds.length === 0) return res.redirect('/grades');
+  if (!cleanSubjectId || rawStudentIds.length === 0) {
+    return res.redirect('/grades');
+  }
 
   fixGradesTable(() => {
-    const promises = studentIds.map(sId => {
+    const promises = rawStudentIds.map(sId => {
       return new Promise((resolve) => {
         const studentId = parseInt(sId, 10);
         const score1 = Math.min(20, Math.max(0, parseFloat(body[`ca1_${sId}`]) || 0));
@@ -125,13 +127,19 @@ exports.postSaveGrades = (req, res) => {
               db.run(
                 "UPDATE grades SET ca1 = ?, ca2 = ?, exam = ?, total = ?, grade = ?, remarks = ? WHERE id = ?",
                 [score1, score2, scoreExam, total, grade, remark, existing.id],
-                () => resolve()
+                (err) => {
+                  if (err) console.error("Error updating grade:", err);
+                  resolve();
+                }
               );
             } else {
               db.run(
                 "INSERT INTO grades (student_id, subject_id, term, session_year, ca1, ca2, exam, total, grade, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [studentId, cleanSubjectId, term, session_year, score1, score2, scoreExam, total, grade, remark],
-                () => resolve()
+                (err) => {
+                  if (err) console.error("Error inserting grade:", err);
+                  resolve();
+                }
               );
             }
           }
