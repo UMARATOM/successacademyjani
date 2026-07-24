@@ -12,131 +12,53 @@ exports.getRegister = (req, res) => {
 };
 
 exports.postRegister = (req, res) => {
+  res.redirect('/students');
+};
+
+// GET: Edit Student Page with safe fallback
+exports.getEdit = (req, res) => {
+  const studentId = req.params.id;
+  console.log("Fetching student for edit ID:", studentId);
+  db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
+    if (err) {
+      console.error("Database error in getEdit:", err);
+      return res.status(500).send("Database error loading student edit page: " + err.message);
+    }
+    if (!student) {
+      console.warn("No student found with ID:", studentId);
+      return res.redirect('/students');
+    }
+    res.render('students/edit', { student: student, error: null, user: req.session ? req.session.user : null });
+  });
+};
+
+// POST: Save Student Edit
+exports.postEdit = (req, res) => {
+  const studentId = req.params.id;
   const body = req.body || {};
   const full_name = body.full_name ? body.full_name.trim() : '';
   const class_name = body.class_name || '';
   const gender = body.gender || 'Male';
-  const dob = body.dob || '';
-  const guardian_name = body.parent_name || body.guardian_name || '';
-  const guardian_phone = body.parent_phone || body.guardian_phone || '';
 
-  if (!full_name || !class_name) {
-    return res.render('students/register', { 
-      error: 'Student Full Name and Class Category are required.', 
-      user: req.session ? req.session.user : null 
-    });
-  }
+  const sql = `UPDATE students SET 
+               fullname = ?, full_name = ?, name = ?, 
+               class = ?, class_name = ?, gender = ? 
+               WHERE id = ?`;
+  const params = [full_name, full_name, full_name, class_name, class_name, gender, studentId];
 
-  const nameParts = full_name.split(' ');
-  const first_name = nameParts[0];
-  const last_name = nameParts.slice(1).join(' ') || '';
-
-  // Inspect existing columns in 'students' table
-  db.all("PRAGMA table_info(students)", [], (pragmaErr, columns) => {
-    const existingCols = (columns || []).map(c => c.name);
-
-    // List all potential columns to auto-create if missing
-    const requiredCols = [
-      { name: 'fullname', type: 'TEXT' },
-      { name: 'full_name', type: 'TEXT' },
-      { name: 'name', type: 'TEXT' },
-      { name: 'first_name', type: 'TEXT' },
-      { name: 'last_name', type: 'TEXT' },
-      { name: 'class', type: 'TEXT' },
-      { name: 'class_name', type: 'TEXT' },
-      { name: 'student_class', type: 'TEXT' },
-      { name: 'gender', type: 'TEXT' },
-      { name: 'dob', type: 'TEXT' },
-      { name: 'guardian_name', type: 'TEXT' },
-      { name: 'guardian_phone', type: 'TEXT' },
-      { name: 'reg_number', type: 'TEXT' },
-      { name: 'registration_number', type: 'TEXT' },
-      { name: 'passport_path', type: 'TEXT' }
-    ];
-
-    const missing = requiredCols.filter(c => !existingCols.includes(c.name));
-    const addColumnPromises = missing.map(c => {
-      return new Promise((resolve) => {
-        db.run(`ALTER TABLE students ADD COLUMN ${c.name} ${c.type}`, () => resolve());
-      });
-    });
-
-    Promise.all(addColumnPromises).then(() => {
-      const currentYear = new Date().getFullYear();
-      db.get("SELECT COUNT(*) AS count FROM students", [], (err, row) => {
-        const count = (row && row.count) ? row.count : 0;
-        const nextNum = String(count + 1).padStart(3, '0');
-        const generatedRegNo = `SAJ/${currentYear}/${nextNum}`;
-
-        const colsToInsert = ['gender', 'dob'];
-        const params = [gender, dob];
-
-        // Populate ALL class column variations to pass NOT NULL constraints
-        const classCols = ['class', 'class_name', 'student_class'];
-        classCols.forEach(col => {
-          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
-            colsToInsert.push(col);
-            params.push(class_name);
-          }
-        });
-
-        // Populate ALL name column variations
-        const nameCols = ['fullname', 'full_name', 'name'];
-        nameCols.forEach(col => {
-          if (existingCols.includes(col) || missing.some(m => m.name === col)) {
-            colsToInsert.push(col);
-            params.push(full_name);
-          }
-        });
-
-        // First & Last Name
-        if (existingCols.includes('first_name') || missing.some(m => m.name === 'first_name')) {
-          colsToInsert.push('first_name');
-          params.push(first_name);
-        }
-        if (existingCols.includes('last_name') || missing.some(m => m.name === 'last_name')) {
-          colsToInsert.push('last_name');
-          params.push(last_name);
-        }
-
-        // Registration Numbers
-        if (existingCols.includes('reg_number') || missing.some(m => m.name === 'reg_number')) {
-          colsToInsert.push('reg_number');
-          params.push(generatedRegNo);
-        }
-        if (existingCols.includes('registration_number') || missing.some(m => m.name === 'registration_number')) {
-          colsToInsert.push('registration_number');
-          params.push(generatedRegNo);
-        }
-
-        // Guardian Info
-        if (existingCols.includes('guardian_name') || missing.some(m => m.name === 'guardian_name')) {
-          colsToInsert.push('guardian_name');
-          params.push(guardian_name);
-        }
-        if (existingCols.includes('guardian_phone') || missing.some(m => m.name === 'guardian_phone')) {
-          colsToInsert.push('guardian_phone');
-          params.push(guardian_phone);
-        }
-
-        const placeholders = colsToInsert.map(() => '?').join(', ');
-        const sql = `INSERT INTO students (${colsToInsert.join(', ')}) VALUES (${placeholders})`;
-
-        db.run(sql, params, function(dbErr) {
-          if (dbErr) {
-            console.error("Database error registering student:", dbErr);
-            return res.render('students/register', { 
-              error: 'Failed to save registration: ' + dbErr.message, 
-              user: req.session ? req.session.user : null 
-            });
-          }
-          res.redirect('/students');
-        });
-      });
-    });
+  db.run(sql, params, (err) => {
+    if (err) {
+      console.error("Error updating student record:", err);
+    }
+    res.redirect('/students');
   });
 };
 
-exports.getEdit = (req, res) => res.redirect('/students');
-exports.postEdit = (req, res) => res.redirect('/students');
-exports.getPrint = (req, res) => res.redirect('/students');
+// GET: Delete Student
+exports.getDelete = (req, res) => {
+  const studentId = req.params.id;
+  db.run("DELETE FROM students WHERE id = ?", [studentId], (err) => {
+    if (err) console.error("Error deleting student:", err);
+    res.redirect('/students');
+  });
+};

@@ -1,94 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Success Academy - Edit Student</title>
-<link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<div class="app-container">
-<header class="header-bar">
-<h2>Success Academy</h2>
-<div class="user-info">Logged in: <strong><%= user.username %></strong> | <a href="/logout">Logout</a></div>
-</header>
-<nav class="navigation-tabs">
-<a href="/dashboard">Dashboard</a>
-<a href="/students" class="active">Manage Students</a>
-<% if (user.role === 'admin') { %>
-<a href="/teachers">Manage Staff</a>
-<a href="/subjects">Manage Subjects</a>
-<% } %>
-<a href="/grades">Gradebook</a>
-</nav>
-<main class="content-body">
-<div class="form-card" style="max-width: 600px;">
-<h3>Modify Student Profile</h3>
-<% if (error) { %>
-<div class="error-msg"><%= error %></div>
-<% } %>
-<form action="/students/edit/<%= student.id %>" method="POST" enctype="multipart/form-data">
-<div class="form-group">
-<label>Registration Number (Immutable)</label>
-<input type="text" value="<%= student.reg_number %>" disabled style="background: #f1f3f4; color:#5f6368;">
+<%- include('../partials/header') %>
+
+<div class="container" style="padding: 20px;">
+  <div class="card" style="background: white; padding: 25px; border-radius: 8px;">
+    <h2>Edit Student Details</h2>
+    <form action="/students/edit/<%= student.id %>" method="POST">
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Student Full Name</label>
+        <input type="text" name="full_name" value="<%= student.fullname || student.full_name || student.name || '' %>" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Class</label>
+        <select name="class_name" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+          <option value="<%= student.class || student.class_name || 'JSS 1' %>" selected>Current: <%= student.class || student.class_name || 'JSS 1' %></option>
+          <option value="Pre-Nursery">Pre-Nursery</option>
+          <option value="Nursery 1">Nursery 1</option>
+          <option value="Nursery 2">Nursery 2</option>
+          <option value="Primary 1">Primary 1</option>
+          <option value="Primary 2">Primary 2</option>
+          <option value="Primary 3">Primary 3</option>
+          <option value="Primary 4">Primary 4</option>
+          <option value="Primary 5">Primary 5</option>
+          <option value="JSS 1">JSS 1</option>
+          <option value="JSS 2">JSS 2</option>
+          <option value="JSS 3">JSS 3</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gender</label>
+        <select name="gender" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          <option value="Male" <%= student.gender === 'Male' ? 'selected' : '' %>>Male</option>
+          <option value="Female" <%= student.gender === 'Female' ? 'selected' : '' %>>Female</option>
+        </select>
+      </div>
+
+      <button type="submit" style="background: #1a73e8; color: white; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Changes</button>
+      <a href="/students" style="margin-left: 15px; text-decoration: none; color: #666;">Cancel</a>
+    </form>
+  </div>
 </div>
-<div class="form-group">
-<label for="fullname">Full Name</label>
-<input type="text" id="fullname" name="fullname" value="<%= student.fullname %>" required>
-</div>
-<div class="form-group">
-<label for="s_class">Class / Class Set</label>
-<select id="s_class" name="s_class" required style="width:100%; padding: 10px; border:1px solid #ccc; border-radius: 4px;">
-<option value="Pre-Nursery" <%= student.class === 'Pre-Nursery' ? 'selected' : '' %>>Pre-Nursery</option>
-<option value="Nursery 1" <%= student.class === 'Nursery 1' ? 'selected' : '' %>>Nursery 1</option>
-<option value="Nursery 2" <%= student.class === 'Nursery 2' ? 'selected' : '' %>>Nursery 2</option>
-<option value="Primary 1" <%= student.class === 'Primary 1' ? 'selected' : '' %>>Primary 1</option>
-<option value="Primary 2" <%= student.class === 'Primary 2' ? 'selected' : '' %>>Primary 2</option>
-<option value="Primary 3" <%= student.class === 'Primary 3' ? 'selected' : '' %>>Primary 3</option>
-<option value="Primary 4" <%= student.class === 'Primary 4' ? 'selected' : '' %>>Primary 4</option>
-<option value="Primary 5" <%= student.class === 'Primary 5' ? 'selected' : '' %>>Primary 5</option>
-<option value="JSS 1" <%= student.class === 'JSS 1' ? 'selected' : '' %>>JSS 1</option>
-<option value="JSS 2" <%= student.class === 'JSS 2' ? 'selected' : '' %>>JSS 2</option>
-<option value="JSS 3" <%= student.class === 'JSS 3' ? 'selected' : '' %>>JSS 3</option>
-</select>
-</div>
-<div class="form-group">
-<label for="gender">Gender</label>
-<select id="gender" name="gender" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-<option value="Male" <%= student.gender === 'Male' ? 'selected' : '' %>>Male</option>
-<option value="Female" <%= student.gender === 'Female' ? 'selected' : '' %>>Female</option>
-</select>
-</div>
-<div class="form-group">
-<label for="status">Registration Status</label>
-<select id="status" name="status" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-<option value="Active" <%= student.status === 'Active' ? 'selected' : '' %>>Active</option>
-<option value="Suspended" <%= student.status === 'Suspended' ? 'selected' : '' %>>Suspended</option>
-<option value="Graduated" <%= student.status === 'Graduated' ? 'selected' : '' %>>Graduated</option>
-</select>
-</div>
-<div class="uploads-section" style="border: 1px dashed #e0e0e0; padding: 15px; border-radius: 6px; margin: 20px 0; background: #fafafa;">
-<h4 style="margin: 0 0 10px 0; color: #333;">Update Uploads (Leave empty to keep existing)</h4>
-<div class="form-group">
-<label for="passport">Passport Photograph</label>
-<input type="file" id="passport" name="passport" accept="image/*">
-</div>
-<div class="form-group">
-<label for="birth_cert">Birth Certificate</label>
-<input type="file" id="birth_cert" name="birth_cert" accept="image/*">
-</div>
-<div class="form-group">
-<label for="primary_cert">Primary School Certificate</label>
-<input type="file" id="primary_cert" name="primary_cert" accept="image/*">
-</div>
-</div>
-<div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-<button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
-<a href="/students" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; border-radius: 4px; color: #333; background: #fff;">Cancel</a>
-</div>
-</form>
-</div>
-</main>
-</div>
-</body>
-</html>
+
+<%- include('../partials/footer') %>
