@@ -1,9 +1,10 @@
 <%- include('../partials/header') %>
 
 <div class="container" style="padding: 20px;">
-  <div class="card" style="background: white; padding: 25px; border-radius: 8px;">
+  <div class="card" style="background: white; padding: 25px; border-radius: 8px; max-width: 600px; margin: auto;">
     <h2>Edit Student Details</h2>
-    <form action="/students/edit/<%= student.id %>" method="POST">
+    
+    <form action="/students/edit/<%= student.id %>" method="POST" enctype="multipart/form-data">
       <div style="margin-bottom: 15px;">
         <label style="display: block; font-weight: bold; margin-bottom: 5px;">Student Full Name</label>
         <input type="text" name="full_name" value="<%= student.fullname || student.full_name || student.name || '' %>" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
@@ -33,6 +34,11 @@
           <option value="Male" <%= student.gender === 'Male' ? 'selected' : '' %>>Male</option>
           <option value="Female" <%= student.gender === 'Female' ? 'selected' : '' %>>Female</option>
         </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Upload / Update Student Passport Photo</label>
+        <input type="file" name="passport" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
       </div>
 
       <button type="submit" style="background: #1a73e8; color: white; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Changes</button>

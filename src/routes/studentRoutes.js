@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const studentController = require('../controllers/studentController');
 
-// Configure Disk Storage for Uploaded Passports
+// Disk storage so uploaded files keep their extension
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploads/');
@@ -25,9 +25,12 @@ router.post('/register', upload.fields([
 ]), studentController.postRegister);
 
 router.get('/edit/:id', studentController.getEdit);
+
+// Enable file upload handling on student edit POST submit
 router.post('/edit/:id', upload.fields([
   { name: 'passport', maxCount: 1 }
 ]), studentController.postEdit);
+
 router.get('/delete/:id', studentController.getDelete);
 
 module.exports = router;
