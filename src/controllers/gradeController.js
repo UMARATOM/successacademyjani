@@ -1,19 +1,30 @@
 const db = require('../config/database');
 
 const fixGradesTable = (callback) => {
-  db.run(`CREATE TABLE IF NOT EXISTS grades (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER,
-    subject_id INTEGER,
-    term TEXT DEFAULT '1st Term',
-    session_year TEXT DEFAULT '2025/2026',
-    ca1 REAL DEFAULT 0,
-    ca2 REAL DEFAULT 0,
-    exam REAL DEFAULT 0,
-    total REAL DEFAULT 0,
-    grade TEXT,
-    remarks TEXT
-  )`, [], () => callback());
+  db.all("PRAGMA table_info(grades)", [], (err, columns) => {
+    const colNames = (columns || []).map(c => c.name);
+    
+    // If table is missing or doesn't have subject_id, recreate cleanly
+    if (!colNames.includes('subject_id')) {
+      db.run("DROP TABLE IF EXISTS grades", [], () => {
+        db.run(`CREATE TABLE grades (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER,
+          subject_id INTEGER,
+          term TEXT DEFAULT '1st Term',
+          session_year TEXT DEFAULT '2025/2026',
+          ca1 REAL DEFAULT 0,
+          ca2 REAL DEFAULT 0,
+          exam REAL DEFAULT 0,
+          total REAL DEFAULT 0,
+          grade TEXT,
+          remarks TEXT
+        )`, [], () => callback());
+      });
+    } else {
+      callback();
+    }
+  });
 };
 
 const calculateGrade = (total) => {
@@ -158,66 +169,68 @@ exports.getReportCard = (req, res) => {
   const selectedTerm = req.query.term || '1st Term';
   const selectedSession = req.query.session_year || '2025/2026';
 
-  db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
-    if (err || !student) return res.redirect('/students');
+  fixGradesTable(() => {
+    db.get("SELECT * FROM students WHERE id = ?", [studentId], (err, student) => {
+      if (err || !student) return res.redirect('/students');
 
-    const targetClass = (student.class || student.class_name || student.student_class || 'JSS 1').toString();
-    const cleanClass = targetClass.toLowerCase().replace(/\s+/g, '');
+      const targetClass = (student.class || student.class_name || student.student_class || 'JSS 1').toString();
+      const cleanClass = targetClass.toLowerCase().replace(/\s+/g, '');
 
-    db.all("SELECT * FROM students", [], (err, allStudents) => {
-      const classStudents = (allStudents || []).filter(s => {
-        const sClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
-        return sClass.includes(cleanClass);
-      });
-      const totalStudentsInClass = classStudents.length || 1;
-
-      const sql = `
-        SELECT g.*, s.subject_name, s.subject_code 
-        FROM grades g 
-        JOIN subjects s ON g.subject_id = s.id 
-        WHERE g.student_id = ? AND g.term = ? AND g.session_year = ?
-      `;
-
-      db.all(sql, [studentId, selectedTerm, selectedSession], (err, gradeRecords) => {
-        let grandTotal = 0;
-        let subjectCount = (gradeRecords || []).length;
-
-        (gradeRecords || []).forEach(r => {
-          grandTotal += (r.total || 0);
+      db.all("SELECT * FROM students", [], (err, allStudents) => {
+        const classStudents = (allStudents || []).filter(s => {
+          const sClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
+          return sClass.includes(cleanClass);
         });
+        const totalStudentsInClass = classStudents.length || 1;
 
-        const overallAverage = subjectCount > 0 ? (grandTotal / subjectCount).toFixed(1) : '0.0';
-        const classStudentIds = classStudents.map(s => parseInt(s.id, 10));
+        const sql = `
+          SELECT g.*, s.subject_name, s.subject_code 
+          FROM grades g 
+          JOIN subjects s ON g.subject_id = s.id 
+          WHERE g.student_id = ? AND g.term = ? AND g.session_year = ?
+        `;
 
-        db.all(
-          "SELECT student_id, SUM(total) as student_grand_total FROM grades WHERE term = ? AND session_year = ? GROUP BY student_id",
-          [selectedTerm, selectedSession],
-          (err, totals) => {
-            const classTotals = (totals || []).filter(t => classStudentIds.includes(parseInt(t.student_id, 10)));
-            classTotals.sort((a, b) => b.student_grand_total - a.student_grand_total);
+        db.all(sql, [studentId, selectedTerm, selectedSession], (err, gradeRecords) => {
+          let grandTotal = 0;
+          let subjectCount = (gradeRecords || []).length;
 
-            let rank = 1;
-            const targetIndex = classTotals.findIndex(t => parseInt(t.student_id, 10) === studentId);
-            if (targetIndex !== -1) {
-              rank = targetIndex + 1;
+          (gradeRecords || []).forEach(r => {
+            grandTotal += (r.total || 0);
+          });
+
+          const overallAverage = subjectCount > 0 ? (grandTotal / subjectCount).toFixed(1) : '0.0';
+          const classStudentIds = classStudents.map(s => parseInt(s.id, 10));
+
+          db.all(
+            "SELECT student_id, SUM(total) as student_grand_total FROM grades WHERE term = ? AND session_year = ? GROUP BY student_id",
+            [selectedTerm, selectedSession],
+            (err, totals) => {
+              const classTotals = (totals || []).filter(t => classStudentIds.includes(parseInt(t.student_id, 10)));
+              classTotals.sort((a, b) => b.student_grand_total - a.student_grand_total);
+
+              let rank = 1;
+              const targetIndex = classTotals.findIndex(t => parseInt(t.student_id, 10) === studentId);
+              if (targetIndex !== -1) {
+                rank = targetIndex + 1;
+              }
+
+              const positionText = getOrdinal(rank);
+
+              res.render('grades/report-card', {
+                student,
+                grades: gradeRecords || [],
+                term: selectedTerm,
+                session_year: selectedSession,
+                grandTotal,
+                subjectCount,
+                overallAverage,
+                totalStudentsInClass,
+                positionText,
+                user: req.session ? req.session.user : null
+              });
             }
-
-            const positionText = getOrdinal(rank);
-
-            res.render('grades/report-card', {
-              student,
-              grades: gradeRecords || [],
-              term: selectedTerm,
-              session_year: selectedSession,
-              grandTotal,
-              subjectCount,
-              overallAverage,
-              totalStudentsInClass,
-              positionText,
-              user: req.session ? req.session.user : null
-            });
-          }
-        );
+          );
+        });
       });
     });
   });
