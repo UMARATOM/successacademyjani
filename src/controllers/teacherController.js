@@ -1,11 +1,8 @@
 const db = require('../config/database');
 
-// Helper to ensure teachers table contains all required columns
 const fixTeachersTable = (callback) => {
   db.all("PRAGMA table_info(teachers)", [], (err, columns) => {
     const colNames = (columns || []).map(c => c.name);
-    
-    // If table missing or doesn't have username column, recreate table cleanly
     if (!colNames.includes('username')) {
       db.run("DROP TABLE IF EXISTS teachers", [], () => {
         db.run(`CREATE TABLE teachers (
@@ -76,6 +73,53 @@ exports.postRegister = (req, res) => {
       }
     );
   });
+};
+
+exports.getEdit = (req, res) => {
+  const teacherId = req.params.id;
+  db.get("SELECT * FROM teachers WHERE id = ?", [teacherId], (err, teacher) => {
+    if (err || !teacher) return res.redirect('/teachers');
+    res.render('teachers/edit', { teacher: teacher, error: null, user: req.session ? req.session.user : null });
+  });
+};
+
+exports.postEdit = (req, res) => {
+  const teacherId = req.params.id;
+  const { fullname, username, password, phone, subject_assigned } = req.body || {};
+
+  if (!fullname || !username || !password) {
+    return res.render('teachers/edit', { 
+      teacher: { id: teacherId, fullname, username, password, phone, subject_assigned },
+      error: 'Full Name, Username, and Password are required.', 
+      user: req.session ? req.session.user : null 
+    });
+  }
+
+  const cleanUsername = username.trim().toLowerCase();
+
+  if (cleanUsername === 'admin') {
+    return res.render('teachers/edit', { 
+      teacher: { id: teacherId, fullname, username, password, phone, subject_assigned },
+      error: "The username 'admin' is reserved for the Administrator.", 
+      user: req.session ? req.session.user : null 
+    });
+  }
+
+  db.run(
+    "UPDATE teachers SET fullname = ?, username = ?, password = ?, phone = ?, subject_assigned = ? WHERE id = ?",
+    [fullname.trim(), cleanUsername, password.trim(), phone || '', subject_assigned || 'General', teacherId],
+    (err) => {
+      if (err) {
+        console.error("Error updating teacher:", err.message);
+        return res.render('teachers/edit', { 
+          teacher: { id: teacherId, fullname, username, password, phone, subject_assigned },
+          error: `Username '${cleanUsername}' might already be in use by another staff member.`, 
+          user: req.session ? req.session.user : null 
+        });
+      }
+      res.redirect('/teachers');
+    }
+  );
 };
 
 exports.getDelete = (req, res) => {

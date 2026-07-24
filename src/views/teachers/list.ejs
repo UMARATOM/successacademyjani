@@ -4,7 +4,7 @@
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
     <div>
       <h2 style="color: #1a365d; margin: 0;">Manage Staff Directory</h2>
-      <p style="color: #718096; margin: 5px 0 0 0; font-size: 14px;">Add new teachers and assign login credentials.</p>
+      <p style="color: #718096; margin: 5px 0 0 0; font-size: 14px;">View registered staff members, access login credentials, or update account details.</p>
     </div>
     <a href="/teachers/register" style="padding: 10px 18px; background: #2b6cb0; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">+ Add New Staff Member</a>
   </div>
@@ -16,9 +16,9 @@
           <tr style="background: #1a365d; color: white; text-align: left;">
             <th style="padding: 12px;">Full Name</th>
             <th style="padding: 12px;">Username</th>
+            <th style="padding: 12px;">Password</th>
             <th style="padding: 12px;">Assigned Subject</th>
             <th style="padding: 12px;">Phone</th>
-            <th style="padding: 12px;">Role</th>
             <th style="padding: 12px; text-align: center;">Actions</th>
           </tr>
         </thead>
@@ -27,11 +27,12 @@
             <tr style="border-bottom: 1px solid #e2e8f0;">
               <td style="padding: 12px; font-weight: bold; color: #2d3748;"><%= teacher.fullname %></td>
               <td style="padding: 12px; color: #2b6cb0; font-weight: bold;"><%= teacher.username %></td>
+              <td style="padding: 12px;"><code style="background: #edf2f7; color: #2c5282; padding: 3px 6px; border-radius: 4px; font-weight: bold;"><%= teacher.password %></code></td>
               <td style="padding: 12px;"><%= teacher.subject_assigned || 'General Teacher' %></td>
               <td style="padding: 12px;"><%= teacher.phone || '-' %></td>
-              <td style="padding: 12px;"><span style="background: #e2e8f0; color: #2d3748; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px;"><%= teacher.role %></span></td>
               <td style="padding: 12px; text-align: center;">
-                <a href="/teachers/delete/<%= teacher.id %>" onclick="return confirm('Remove staff account?');" style="color: #e53e3e; font-weight: bold; text-decoration: none;">Delete Account</a>
+                <a href="/teachers/edit/<%= teacher.id %>" style="color: #d69e2e; font-weight: bold; text-decoration: none; margin-right: 8px;">Edit</a> |
+                <a href="/teachers/delete/<%= teacher.id %>" onclick="return confirm('Delete staff account?');" style="color: #e53e3e; font-weight: bold; text-decoration: none; margin-left: 8px;">Delete</a>
               </td>
             </tr>
           <% }); %>
