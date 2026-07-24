@@ -1,6 +1,7 @@
 const db = require('../config/database');
 
-exports.getStudents = (req, res) => {
+// List Students
+const getStudents = (req, res) => {
   const selectedClass = req.query.class_filter || 'ALL';
 
   let sql = "SELECT * FROM students";
@@ -23,11 +24,13 @@ exports.getStudents = (req, res) => {
   });
 };
 
-exports.getRegister = (req, res) => {
+// Form to Register Student
+const getRegister = (req, res) => {
   res.render('students/register', { error: null, user: req.session ? req.session.user : null });
 };
 
-exports.postRegister = (req, res) => {
+// Process Registration
+const postRegister = (req, res) => {
   const {
     fullname, full_name, name,
     student_class, class_name, class: rawClass,
@@ -112,7 +115,8 @@ exports.postRegister = (req, res) => {
   }
 };
 
-exports.getEdit = (req, res) => {
+// Edit Student
+const getEdit = (req, res) => {
   const id = req.params.id;
   db.get("SELECT * FROM students WHERE id = ?", [id], (err, student) => {
     if (err || !student) return res.redirect('/students');
@@ -120,7 +124,8 @@ exports.getEdit = (req, res) => {
   });
 };
 
-exports.postEdit = (req, res) => {
+// Save Edited Student
+const postEdit = (req, res) => {
   const id = req.params.id;
   const { fullname, student_class, gender, guardian_phone, reg_number } = req.body || {};
 
@@ -138,9 +143,19 @@ exports.postEdit = (req, res) => {
   });
 };
 
-exports.getDelete = (req, res) => {
+// Delete Student
+const getDelete = (req, res) => {
   const id = req.params.id;
   db.run("DELETE FROM students WHERE id = ?", [id], () => {
     res.redirect('/students');
   });
+};
+
+module.exports = {
+  getStudents,
+  getRegister,
+  postRegister,
+  getEdit,
+  postEdit,
+  getDelete
 };
