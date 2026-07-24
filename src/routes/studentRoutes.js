@@ -34,7 +34,9 @@ router.post('/register', upload.fields([
 
 router.get('/edit/:id', studentController.getEdit);
 router.post('/edit/:id', upload.fields([
-  { name: 'passport', maxCount: 1 }
+  { name: 'passport', maxCount: 1 },
+  { name: 'birth_certificate', maxCount: 1 },
+  { name: 'primary_certificate', maxCount: 1 }
 ]), studentController.postEdit);
 
 router.get('/delete/:id', studentController.getDelete);

@@ -1,7 +1,6 @@
 const db = require('../config/database');
 const fs = require('fs');
 
-// GET Student List with Fail-Safe Class Filtering
 exports.getStudents = (req, res) => {
   const selectedClass = req.query.class_filter ? req.query.class_filter.trim() : 'ALL';
   
@@ -157,22 +156,39 @@ exports.postEdit = (req, res) => {
   const full_name = body.full_name ? body.full_name.trim() : '';
   const class_name = body.class_name || '';
   const gender = body.gender || 'Male';
+  const dob = body.dob || '';
   const session_year = body.session_year || '2025/2026';
+  const guardian_name = body.guardian_name || '';
+  const guardian_phone = body.guardian_phone || '';
   const status = body.status || 'Active';
 
-  let passport_path = null;
-  if (req.files && req.files['passport'] && req.files['passport'][0]) {
-    const file = req.files['passport'][0];
-    const buffer = fs.readFileSync(file.path);
-    passport_path = `data:${file.mimetype};base64,${buffer.toString('base64')}`;
-  }
+  const getBase64 = (fileArray) => {
+    if (fileArray && fileArray[0]) {
+      const file = fileArray[0];
+      const buffer = fs.readFileSync(file.path);
+      return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
+    }
+    return null;
+  };
 
-  let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?, session_year = ?, status = ?`;
-  let params = [full_name, full_name, full_name, class_name, class_name, gender, session_year, status];
+  let passport_path = getBase64(req.files ? req.files['passport'] : null);
+  let birth_cert = getBase64(req.files ? req.files['birth_certificate'] : null);
+  let primary_cert = getBase64(req.files ? req.files['primary_certificate'] : null);
+
+  let sql = `UPDATE students SET fullname = ?, full_name = ?, name = ?, class = ?, class_name = ?, gender = ?, dob = ?, session_year = ?, guardian_name = ?, guardian_phone = ?, status = ?`;
+  let params = [full_name, full_name, full_name, class_name, class_name, gender, dob, session_year, guardian_name, guardian_phone, status];
 
   if (passport_path) {
     sql += `, passport_path = ?`;
     params.push(passport_path);
+  }
+  if (birth_cert) {
+    sql += `, birth_cert = ?`;
+    params.push(birth_cert);
+  }
+  if (primary_cert) {
+    sql += `, primary_cert = ?`;
+    params.push(primary_cert);
   }
 
   sql += ` WHERE id = ?`;
