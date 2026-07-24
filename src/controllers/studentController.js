@@ -1,27 +1,29 @@
 const db = require('../config/database');
 const fs = require('fs');
 
-// GET Student List with Bulletproof Flexible Class Filtering
+// GET Student List with Fail-Safe Class Filtering
 exports.getStudents = (req, res) => {
-  const rawClass = req.query.class_filter ? req.query.class_filter.trim() : 'ALL';
+  const selectedClass = req.query.class_filter ? req.query.class_filter.trim() : 'ALL';
   
-  let sql = "SELECT * FROM students";
-  let params = [];
+  db.all("SELECT * FROM students ORDER BY id DESC", [], (err, allRows) => {
+    if (err) {
+      console.error("Error fetching students:", err);
+      return res.render('students/list', { students: [], selectedClass, user: req.session ? req.session.user : null });
+    }
 
-  if (rawClass !== 'ALL' && rawClass !== '') {
-    // Strip spaces for flexible matching (e.g. 'JSS 1' vs 'JSS1')
-    const cleanClass = rawClass.replace(/\s+/g, '');
-    sql += " WHERE REPLACE(LOWER(class), ' ', '') LIKE LOWER(?) OR REPLACE(LOWER(class_name), ' ', '') LIKE LOWER(?) OR REPLACE(LOWER(student_class), ' ', '') LIKE LOWER(?)";
-    params = [`%${cleanClass}%`, `%${cleanClass}%`, `%${cleanClass}%`];
-  }
-  
-  sql += " ORDER BY id DESC";
+    let filteredRows = allRows || [];
 
-  db.all(sql, params, (err, rows) => {
-    if (err) console.error("Error fetching filtered students:", err);
+    if (selectedClass !== 'ALL' && selectedClass !== '') {
+      const searchTarget = selectedClass.toLowerCase().replace(/\s+/g, '');
+      filteredRows = filteredRows.filter(s => {
+        const studentClass = (s.class_name || s.class || s.student_class || '').toString().toLowerCase().replace(/\s+/g, '');
+        return studentClass.includes(searchTarget);
+      });
+    }
+
     res.render('students/list', { 
-      students: rows || [], 
-      selectedClass: rawClass,
+      students: filteredRows, 
+      selectedClass: selectedClass,
       user: req.session ? req.session.user : null 
     });
   });
