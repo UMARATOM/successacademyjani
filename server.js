@@ -6,49 +6,39 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Body Parsers & Session
+// Body Parsers & Session Configuration
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'success_academy_secret_key',
+  secret: 'success_academy_secret_key_2026',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false
 }));
 
-// Set EJS View Engine
+// Set View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
-// Serve Static Files
+// Serve Public Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
-// Safe Route Loader
-const loadRoute = (routePath) => {
-  const fullPath = path.join(__dirname, routePath);
-  if (fs.existsSync(fullPath + '.js') || fs.existsSync(fullPath)) {
-    return require(fullPath);
-  }
-  return null;
-};
+// Core Routes
+const indexRoutes = require('./src/routes/indexRoutes');
+const studentRoutes = require('./src/routes/studentRoutes');
 
-// Mount core routes
-const studentRoutes = loadRoute('src/routes/studentRoutes');
-const teacherRoutes = loadRoute('src/routes/teacherRoutes');
-const subjectRoutes = loadRoute('src/routes/subjectRoutes');
-const gradeRoutes = loadRoute('src/routes/gradeRoutes');
+app.use('/', indexRoutes);
+app.use('/students', studentRoutes);
 
-if (studentRoutes) app.use('/students', studentRoutes);
-if (teacherRoutes) app.use('/teachers', teacherRoutes);
-if (subjectRoutes) app.use('/subjects', subjectRoutes);
-if (gradeRoutes) app.use('/grades', gradeRoutes);
-
-// Home route redirect
+// Root Redirect to Login or Directory
 app.get('/', (req, res) => {
-  res.redirect('/students');
+  if (req.session && req.session.user) {
+    res.redirect('/students');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`[SERVER] Success Academy System live on port ${PORT}`);
+  console.log(`[SERVER] Success Academy System running on port ${PORT}`);
 });
